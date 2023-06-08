@@ -1,0 +1,73 @@
+/Users/danielrutkovsky/Developer/gen-typescript/types.go.tmpl{{define "types"}}
+
+{{- $typeMap := .TypeMap -}}
+{{- $types := .Types -}}
+{{- $services := .Services -}}
+
+// MARK: - Types
+
+{{- if $types -}}
+{{range $_i, $type := $types -}}
+
+{{if isEnumType $type }}
+public enum {{$type.Name}}: String, Codable {
+{{- range $_, $field := $type.Fields}}
+    case {{camelCase $field.Name}} = "{{$field.Name}}"
+{{- end}}
+}
+{{end -}}
+
+{{- if isStructType $type }}
+public struct {{$type.Name}}: Codable {
+    {{- range $_, $field := $type.Fields}}
+    {{- $isExportable := true -}}
+    {{- range $meta := $field.Meta -}}
+        {{- if exists $meta "json" -}}
+            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                {{- $isExportable = false}}
+            {{- end -}}
+        {{- end -}}
+    {{- end }}
+    {{- if $isExportable }}
+    let {{template "fieldName" dict "Field" .}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap}}{{if .Optional}}?{{end}}
+    {{- end -}}
+    {{- end}}
+
+    {{- if $type.Fields}}
+
+     enum CodingKeys: String, CodingKey {
+    {{- range $_, $field := $type.Fields}}
+    {{- $isExportable := true -}}
+    {{- range $meta := $field.Meta -}}
+        {{- if exists $meta "json" -}}
+            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                {{- $isExportable = false}}
+            {{- end -}}
+        {{- end -}}
+    {{- end }}
+    {{- if $isExportable }}
+        case {{template "fieldName" dict "Field" .}} = "{{template "codingKey" dict "Field" .}}"
+    {{- end -}}
+    {{- end}}
+    }
+
+    {{- end}}
+}
+{{end -}}
+{{end -}}
+{{end -}}
+
+{{if $services}}
+{{- range $_, $service := $services}}
+public protocol {{$service.Name}} {
+{{- range $_, $method := $service.Methods}}
+    {{ $generateHeaders := "false" -}}
+    func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}}
+    {{ $generateHeaders := "true" -}}
+    func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} 
+{{- end }}
+}
+{{- end -}}
+{{end -}}
+
+{{end}}

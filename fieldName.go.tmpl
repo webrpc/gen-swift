@@ -1,0 +1,13 @@
+{{- define "fieldName" -}}
+
+{{- $field := .Field -}}
+{{- $fieldName := $field.Name -}}
+
+{{- if in $fieldName "associatedtype" "class" "deinit" "enum" "extension" "fileprivate" "func" "import" "init" "inout" "internal" "let" "open" "operator" "private" "precedencegroup" "protocol" "public" "rethrows" "static" "struct" "subscript" "typealias" "var" "break" "case" "catch" "continue" "default" "defer" "do" "else" "fallthrough" "for" "guard" "if" "in" "repeat" "return" "throw" "switch" "where" "while" "Any" "as" "await" "catch" "false" "is" "nil" "rethrows" "self" "Self" "super" "throw" "throws" "true" "try" -}}
+    {{- (printf "`%v`" $fieldName) -}}
+{{- else -}}
+    {{- (camelCase $fieldName) -}}
+{{- end -}}
+
+{{- end -}}
+

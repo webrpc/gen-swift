@@ -1,0 +1,123 @@
+{{define "client"}}
+
+{{- $typeMap := .TypeMap -}}
+
+{{- if .Services -}}
+// MARK: - Client
+
+{{- range $service := .Services}}
+{{- range $_, $method := $service.Methods -}}
+{{- if gt (len $method.Inputs) 0 -}}
+private struct {{$method.Name}}Request: Codable {
+{{- range $_, $input := $method.Inputs}}
+    let {{$input.Name}}: {{template "type" dict "Type" $input.Type "TypeMap" $typeMap}}{{if $input.Optional}}?{{end}}
+{{- end}}
+}
+{{- end -}}
+
+{{- if gt (len $method.Outputs) 0 }}
+private struct {{$method.Name}}Response: Codable {
+{{- range $_, $output := $method.Outputs}}
+    let {{$output.Name}}: {{template "type" dict "Type" $output.Type "TypeMap" $typeMap}}{{if $output.Optional}}?{{end}}
+{{- end}}
+}
+{{end}}
+{{end -}}
+
+public class {{.Name}}Client {
+    private let hostname: String
+    private let apiPath = "/rpc/{{.Name}}/"
+    private let urlSession: URLSession
+
+    private lazy var jsonDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+        return decoder
+    }()
+
+    private struct Empty: Codable {}
+
+    public init(hostname: String, urlSession: URLSession = URLSession.shared) {
+        self.hostname = hostname
+        self.urlSession = urlSession
+    }
+
+    private func getURL(for service: String) -> String {
+        "\(hostname)\(apiPath)\(service)"
+    }
+
+    private func sendRequest(url: String, headers: [String: String]?, data: Data? = nil) async throws {
+        let _: Empty? = try await sendRequest(url: url, headers: headers, data: data)
+    }
+
+    @discardableResult
+    private func sendRequest<T: Decodable>(
+        url: String,
+        headers: [String: String]?,
+        data: Data? = nil) async throws -> T {
+            var request = URLRequest(url: URL(string: url)!)
+            request.httpMethod = "POST"
+            headers?.forEach {
+                request.setValue($0.value, forHTTPHeaderField: $0.key)
+            }
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = data
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw WebrpcError(error: "Unknown error", code: -999, message: nil, cause: nil, status: -999, errorKind: .unknownError)
+            }
+
+            switch httpResponse.statusCode {
+            case 200..<300:
+                let decoded = try jsonDecoder.decode(T.self, from: data)
+                return decoded
+            default:
+                if let decoded = try? jsonDecoder.decode(WebrpcError.self, from: data) {
+                    throw decoded
+                }
+
+                throw WebrpcError(error: "Unknown error", code: -999, message: nil, cause: nil, status: httpResponse.statusCode, errorKind: .unknownError)
+            }
+        }
+    }
+
+extension {{.Name}}Client: {{.Name}} {
+  {{- range $_, $method := .Methods}}
+    {{ $generateHeaders := "false" -}}
+    public func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} {
+        try await {{firstLetterToLower $method.Name}}(
+        {{- range $i, $input := $method.Inputs}}
+            {{- if $i}}, {{end}}{{$input.Name}}: {{$input.Name}}
+        {{- end -}}
+        {{- if (gt (len $method.Inputs) 0)}}, {{end}}headers: nil)
+    }
+
+    {{$generateHeaders := "true" -}}
+    public func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} {
+        {{- if (gt (len $method.Inputs) 0)}}
+        let request = {{$method.Name}}Request(
+        {{- range $i, $input := $method.Inputs}}
+            {{- if $i}}, {{end}}{{$input.Name}}: {{$input.Name}}
+        {{- end -}}
+        )
+        {{- end}}
+        {{if (gt (len $method.Outputs) 0)}}let response: {{$method.Name}}Response = {{ end -}}try await sendRequest(url: getURL(for: "{{.Name}}"), headers: headers{{ternary (gt (.Inputs | len) 0) ", data: try JSONEncoder().encode(request)" "" -}})
+        {{- if (eq (len $method.Outputs) 1)}}
+        return {{range $i, $output := $method.Outputs -}}
+            response.{{$output.Name}}
+        {{- end -}}
+        {{- end}}
+        {{- if (gt (len $method.Outputs) 1)}}
+        return ({{- range $i, $output := $method.Outputs}}
+            {{- if $i}}, {{end}}{{$output.Name}}: response.{{$output.Name}}
+        {{- end -}})
+        {{- end}}
+    }
+  {{end}}
+}
+{{end -}}
+{{end -}}
+{{end}}
