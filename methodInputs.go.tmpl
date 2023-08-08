@@ -1,0 +1,13 @@
+{{- define "methodInputs" -}}
+
+{{- $method := .Method -}}
+{{- $typeMap := .TypeMap -}}
+{{- $generateHeaders := .GenerateHeaders -}}
+
+{{- range $i, $input := $method.Inputs}}
+    {{- if $i}}, {{end}}{{$input.Name}}: {{template "type" dict "Type" $input.Type "TypeMap" $typeMap}}{{if .Optional}}?{{end}}
+{{- end -}}
+{{- if eq $generateHeaders "true" -}}
+{{if (gt (len $method.Inputs) 0)}}, {{end}}headers: [String: String]?
+{{- end -}}
+{{- end -}}

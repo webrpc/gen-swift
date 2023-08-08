@@ -1,0 +1,57 @@
+{{define "clientHelpers"}}
+{{- $webrpcErrors := .WebrpcErrors -}}
+{{- $schemaErrors := .SchemaErrors -}}
+
+// MARK: - Errors
+
+public struct WebrpcError: Codable, Error {
+    let error: String
+    let code: Int
+    let message: String?
+    let cause: String?
+    let status: Int
+    let kind: ErrorKind
+
+    enum CodingKeys: String, CodingKey {
+        case error
+        case code
+        case message = "msg"
+        case cause
+        case status
+    }
+
+     public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        error = try container.decode(String.self, forKey: .error)
+        code = try container.decode(Int.self, forKey: .code)
+        message = try? container.decodeIfPresent(String.self, forKey: .message)
+        cause = try? container.decodeIfPresent(String.self, forKey: .cause)
+        status = try container.decode(Int.self, forKey: .status)
+
+        if let errorKind = ErrorKind(rawValue: code) {
+            kind = errorKind
+        } else {
+            kind = .unknownError
+        }
+    }
+
+    internal init(error: String, code: Int, message: String?, cause: String?, status: Int, errorKind: ErrorKind) {
+        self.error = error
+        self.code = code
+        self.message = message
+        self.cause = cause
+        self.status = status
+        self.kind = errorKind
+    }
+
+    public enum ErrorKind: Int {
+    {{- range $_, $error := $webrpcErrors}}
+        case {{camelCase $error.Name}}Error = {{$error.Code}}
+    {{- end }}
+    {{- range $_, $error := $schemaErrors}}
+        case {{camelCase $error.Name}}Error = {{$error.Code}}
+    {{- end }}
+        case unknownError = -999
+    }
+}
+{{end}}

@@ -1,0 +1,19 @@
+{{- define "codingKey" -}}
+{{- /* Prints field name while prioritizing "json" field meta */ -}}
+
+{{- $field := .Field -}}
+{{- $fieldName := $field.Name -}}
+
+{{- range $meta := $field.Meta -}} 
+    {{- if exists $meta "json" -}}
+    {{- $fieldName = get $meta "json" | split "," | first -}}
+    {{- end -}}
+{{- end -}}
+
+{{- if in (toLower $fieldName) "associatedtype" "class" "deinit" "enum" "extension" "fileprivate" "func" "import" "init" "inout" "internal" "let" "open" "operator" "private" "precedencegroup" "protocol" "public" "rethrows" "static" "struct" "subscript" "typealias" "var" "break" "case" "catch" "continue" "default" "defer" "do" "else" "fallthrough" "for" "guard" "if" "in" "repeat" "return" "throw" "switch" "where" "while" "Any" "as" "await" "catch" "false" "is" "nil" "rethrows" "self" "Self" "super" "throw" "throws" "true" "try" -}}
+    {{- $fieldName := (printf "`%v`"  $fieldName) -}}
+{{- end -}}
+
+{{- $fieldName -}}
+
+{{- end -}}

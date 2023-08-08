@@ -1,0 +1,19 @@
+{{- define "methodOutputs" -}}
+
+{{- $method := .Method -}}
+{{- $typeMap := .TypeMap -}}
+
+{{- if eq (len $method.Outputs) 1 -}}
+{{- range $i, $output := $method.Outputs -}}
+    {{template "type" dict "Type" $output.Type "TypeMap" $typeMap}}
+{{- end -}}
+{{- end -}}
+
+{{- if gt (len $method.Outputs) 1 -}}
+(
+{{- range $i, $output := $method.Outputs}}
+    {{- if $i}}, {{end}}{{$output.Name}}: {{template "type" dict "Type" $output.Type "TypeMap" $typeMap}}
+{{- end -}}
+)
+{{- end -}}
+{{- end}}
