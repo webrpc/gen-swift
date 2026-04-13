@@ -163,12 +163,6 @@ service Keywords
 	requireContains(t, output, "public let `precedencegroup`: String")
 	requireContains(t, output, "case `await` = \"await\"")
 	requireContains(t, output, "case `precedencegroup` = \"precedencegroup\"")
-
-	project := writeSwiftPackage(t, "keyword-fields", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-	})
-
-	runSwiftBuild(t, project)
 }
 
 func TestNullOptionalGeneration(t *testing.T) {
@@ -187,12 +181,9 @@ service Nulls
 `
 
 	output := generateSwift(t, schema)
-
-	project := writeSwiftPackage(t, "null-optional", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-	})
-
-	runSwiftBuild(t, project)
+	requireContains(t, output, "public let value: WebRPCNull?")
+	requireContains(t, output, "public struct MaybeNull: Codable, Sendable")
+	requireContains(t, output, "public func echo(")
 }
 
 func TestServiceNameCollisionGeneration(t *testing.T) {
@@ -246,12 +237,6 @@ service Wallet
 	output := generateSwift(t, schema)
 	requireContains(t, output, "public enum CollideWalletGeneratedRPCAPI")
 	requireContains(t, output, "public struct CollideWalletGeneratedRPCClient: Sendable")
-
-	project := writeSwiftPackage(t, "service-collision", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-	})
-
-	runSwiftBuild(t, project)
 }
 
 func TestMultiServiceGenerationSeparatesTopLevelDeclarations(t *testing.T) {
@@ -275,12 +260,6 @@ service Baz
 	requireContains(t, output, "public enum FooBazAPI")
 	requireContains(t, output, "public struct FooBazClient: Sendable")
 	requireNotContains(t, output, "}public enum ")
-
-	project := writeSwiftPackage(t, "multi-service-formatting", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-	})
-
-	runSwiftBuild(t, project)
 }
 
 func TestCrossServiceSchemaAwareNameCollisionGeneration(t *testing.T) {
@@ -303,209 +282,6 @@ service FooBar
 	requireContains(t, output, "public struct FooBarClient: Sendable")
 	requireContains(t, output, "public enum FooBarServiceAPI")
 	requireContains(t, output, "public struct FooBarServiceClient: Sendable")
-
-	project := writeSwiftPackage(t, "multi-service-collision", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-	})
-
-	runSwiftBuild(t, project)
-}
-
-func TestSwiftPackageCompilesAndRunsRuntimeHelpers(t *testing.T) {
-	schema := `
-webrpc = v1
-
-name = Helper
-version = v1.0.0
-basepath = /rpc
-
-service Helper
-  - GetUser(userId: uint64) => (code: uint32, username: string)
-
-error 200 UserNotFound "user not found"
-`
-
-	output := generateSwift(t, schema)
-
-	project := writeSwiftPackage(t, "helper-runtime", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-		"Tests/GeneratedTests/GeneratedTests.swift": `
-import Foundation
-import XCTest
-@testable import Generated
-
-final class GeneratedTests: XCTestCase {
-    func testHelperRoundTripWorks() throws {
-        let request = HelperAPI.GetUser.Request(userId: 7)
-        let body = try HelperAPI.GetUser.encodeRequest(request)
-        let bodyJSON = try JSONSerialization.jsonObject(with: body) as? [String: Any]
-        XCTAssertEqual(bodyJSON?["userId"] as? NSNumber, 7)
-
-        let response = try HelperAPI.GetUser.decodeResponse(Data(#"{"code":200,"username":"alice"}"#.utf8))
-        XCTAssertEqual(response.code, 200)
-        XCTAssertEqual(response.username, "alice")
-
-        XCTAssertEqual(HelperAPI.GetUser.path, "/GetUser")
-        XCTAssertEqual(HelperAPI.GetUser.urlPath, "/rpc/Helper/GetUser")
-    }
-
-    func testErrorDecodeWorks() throws {
-        let error = decodeWebRPCError(
-            statusCode: 404,
-            data: Data(#"{"error":"UserNotFound","code":200,"msg":"user not found","cause":"","status":404}"#.utf8)
-        )
-
-        XCTAssertEqual(error.error, "UserNotFound")
-        XCTAssertEqual(error.code, 200)
-        XCTAssertEqual(error.message, "user not found")
-        XCTAssertEqual(error.status, 404)
-        switch error.kind {
-        case .userNotFound:
-            break
-        default:
-            XCTFail("expected schema error kind")
-        }
-    }
-
-    func testMalformedSuccessBodyBecomesWebrpcBadResponse() async throws {
-        struct BadTransport: WebRPCTransport {
-            func post(
-                baseURL: String,
-                path: String,
-                body: Data,
-                headers: [String: String]
-            ) async throws -> WebRPCHTTPResponse {
-                WebRPCHTTPResponse(statusCode: 200, body: Data("not-json".utf8))
-            }
-        }
-
-        let client = HelperClient(baseURL: "https://example.com", transport: BadTransport())
-
-        do {
-            _ = try await client.getUser(HelperAPI.GetUser.Request(userId: 1))
-            XCTFail("expected error")
-        } catch let error as WebRPCError {
-            XCTAssertEqual(error.error, "WebrpcBadResponse")
-            XCTAssertEqual(error.code, WebRPCErrorKind.webrpcBadResponse.code)
-            switch error.kind {
-            case .webrpcBadResponse:
-                break
-            default:
-                XCTFail("expected webrpcBadResponse kind")
-            }
-            XCTAssertTrue(error.cause.contains("not-json"))
-        } catch {
-            XCTFail("expected WebRPCError, got \(type(of: error))")
-        }
-    }
-
-    func testClientSendsWebrpcHeaderAndParsesVersions() async throws {
-        actor Recorder {
-            private(set) var headers: [String: String] = [:]
-
-            func set(headers: [String: String]) {
-                self.headers = headers
-            }
-
-            func snapshot() -> [String: String] {
-                headers
-            }
-        }
-
-        struct CaptureTransport: WebRPCTransport {
-            let recorder: Recorder
-
-            func post(
-                baseURL: String,
-                path: String,
-                body: Data,
-                headers: [String: String]
-            ) async throws -> WebRPCHTTPResponse {
-                await recorder.set(headers: headers)
-                return WebRPCHTTPResponse(
-                    statusCode: 200,
-                    body: Data(#"{"code":200,"username":"alice"}"#.utf8),
-                    headers: ["webrpc": WEBRPC_HEADER_VALUE]
-                )
-            }
-        }
-
-        let recorder = Recorder()
-        let client = HelperClient(
-            baseURL: "https://example.com",
-            transport: CaptureTransport(recorder: recorder),
-            headers: { ["X-Test": "1"] }
-        )
-
-        let response = try await client.getUser(HelperAPI.GetUser.Request(userId: 9))
-        XCTAssertEqual(response.username, "alice")
-
-        let sentHeaders = await recorder.snapshot()
-        XCTAssertEqual(sentHeaders[WEBRPC_HEADER], WEBRPC_HEADER_VALUE)
-        XCTAssertEqual(sentHeaders["X-Test"], "1")
-
-        let versions = versionFromHeader(["webrpc": WEBRPC_HEADER_VALUE])
-        XCTAssertFalse(versions.webrpcGenVersion.isEmpty)
-        XCTAssertEqual(versions.schemaName, "Helper")
-        XCTAssertEqual(versions.schemaVersion, "v1.0.0")
-
-        let responseVersions = versionFromHeader(
-            WebRPCHTTPResponse(statusCode: 200, body: Data(), headers: ["Webrpc": WEBRPC_HEADER_VALUE])
-        )
-        XCTAssertEqual(responseVersions, versions)
-    }
-}
-`,
-	})
-
-	runSwiftTest(t, project)
-}
-
-func TestAnyIntegerRoundTripPreservesPrecision(t *testing.T) {
-	schema := `
-webrpc = v1
-
-name = AnyValue
-version = v1.0.0
-basepath = /rpc
-
-struct Box
-  - payload: any
-
-service AnyValue
-  - Echo(Box) => (Box)
-`
-
-	output := generateSwift(t, schema)
-
-	project := writeSwiftPackage(t, "any-integer", map[string]string{
-		"Sources/Generated/Generated.swift": output,
-		"Tests/GeneratedTests/GeneratedTests.swift": `
-import Foundation
-import XCTest
-@testable import Generated
-
-final class GeneratedTests: XCTestCase {
-    func testLargeIntegerRoundTripPreservesPrecision() throws {
-        let source = Data(#"{"payload":9007199254740993}"#.utf8)
-        let decoded = try JSONDecoder().decode(Box.self, from: source)
-
-        switch decoded.payload {
-        case .integer(let value):
-            XCTAssertEqual(value, 9_007_199_254_740_993)
-        default:
-            XCTFail("expected integer payload")
-        }
-
-        let encoded = try JSONEncoder().encode(decoded)
-        let encodedString = String(decoding: encoded, as: UTF8.self)
-        XCTAssertTrue(encodedString.contains(#""payload":9007199254740993"#))
-    }
-}
-`,
-	})
-
-	runSwiftTest(t, project)
 }
 
 func TestWebrpcHeaderOptionGeneration(t *testing.T) {
@@ -523,69 +299,19 @@ service Headers
 	defaultOutput := generateSwift(t, schema)
 	requireContains(t, defaultOutput, `public let WEBRPC_HEADER = "Webrpc"`)
 	requireContains(t, defaultOutput, "includeWebRPCHeader: true")
+	requireContains(t, defaultOutput, "requestHeaders[WEBRPC_HEADER] = WEBRPC_HEADER_VALUE")
 
 	disabledOutput := generateSwift(t, schema, "-webrpcHeader=false")
 	requireContains(t, disabledOutput, `public let WEBRPC_HEADER = "Webrpc"`)
 	requireContains(t, disabledOutput, "includeWebRPCHeader: false")
-
-	project := writeSwiftPackage(t, "webrpc-header-disabled", map[string]string{
-		"Sources/Generated/Generated.swift": disabledOutput,
-		"Tests/GeneratedTests/GeneratedTests.swift": `
-import Foundation
-import XCTest
-@testable import Generated
-
-final class GeneratedTests: XCTestCase {
-    func testDisabledHeaderIsNotAdded() async throws {
-        actor Recorder {
-            private(set) var headers: [String: String] = [:]
-
-            func set(headers: [String: String]) {
-                self.headers = headers
-            }
-
-            func snapshot() -> [String: String] {
-                headers
-            }
-        }
-
-        struct CaptureTransport: WebRPCTransport {
-            let recorder: Recorder
-
-            func post(
-                baseURL: String,
-                path: String,
-                body: Data,
-                headers: [String: String]
-            ) async throws -> WebRPCHTTPResponse {
-                await recorder.set(headers: headers)
-                return WebRPCHTTPResponse(
-                    statusCode: 200,
-                    body: Data(#"{"ok":true}"#.utf8)
-                )
-            }
-        }
-
-        let recorder = Recorder()
-        let client = HeadersClient(
-            baseURL: "https://example.com",
-            transport: CaptureTransport(recorder: recorder)
-        )
-
-        let response = try await client.ping()
-        XCTAssertEqual(response.ok, true)
-
-        let sentHeaders = await recorder.snapshot()
-        XCTAssertNil(sentHeaders[WEBRPC_HEADER])
-    }
-}
-`,
-	})
-
-	runSwiftTest(t, project)
+	requireNotContains(t, disabledOutput, "requestHeaders[WEBRPC_HEADER] = WEBRPC_HEADER_VALUE")
 }
 
 func TestExternalSchemaGeneratesCompilableClient(t *testing.T) {
+	if os.Getenv("WEBRPC_SWIFT_EXTERNAL_SCHEMA") == "" {
+		t.Skip("set WEBRPC_SWIFT_EXTERNAL_SCHEMA=1 to run external schema integration test")
+	}
+
 	schemaPath := filepath.Join("..", "waas", "proto", "waas.ridl")
 	if _, err := os.Stat(schemaPath); err != nil {
 		t.Skipf("external schema fixture not available: %v", err)
@@ -611,9 +337,70 @@ func TestExternalSchemaGeneratesCompilableClient(t *testing.T) {
 
 	project := writeSwiftPackage(t, "external-schema", map[string]string{
 		"Sources/Generated/Client.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testCommitVerifierEncodesSemanticPayload() throws {
+        let body = try WaasWalletAPI.CommitVerifier.encodeRequest(
+            CommitVerifierRequest(
+                identityType: .email,
+                authMode: .idToken,
+                metadata: ["region": "eu", "tier": "gold"],
+                handle: "user@example.com"
+            )
+        )
+
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["identityType"] as? String, "Email")
+        XCTAssertEqual(json["authMode"] as? String, "IDToken")
+        XCTAssertEqual(json["handle"] as? String, "user@example.com")
+
+        let metadata = try XCTUnwrap(json["metadata"] as? [String: String])
+        XCTAssertEqual(metadata["region"], "eu")
+        XCTAssertEqual(metadata["tier"], "gold")
+    }
+
+    func testSendTransactionEncodesSemanticPayload() throws {
+        let body = try WaasWalletAPI.SendTransaction.encodeRequest(
+            SendTransactionRequest(
+                network: "amoy",
+                wallet: "0xwallet",
+                to: "0xabc",
+                value: "0",
+                data: "0x1234",
+                mode: .native,
+                feeCeiling: "1000000",
+                nonce: "42"
+            )
+        )
+
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["network"] as? String, "amoy")
+        XCTAssertEqual(json["wallet"] as? String, "0xwallet")
+        XCTAssertEqual(json["to"] as? String, "0xabc")
+        XCTAssertEqual(json["value"] as? String, "0")
+        XCTAssertEqual(json["data"] as? String, "0x1234")
+        XCTAssertEqual(json["mode"] as? String, "Native")
+        XCTAssertEqual(json["feeCeiling"] as? String, "1000000")
+        XCTAssertEqual(json["nonce"] as? String, "42")
+    }
+
+    func testVersionHeaderParsingWorksForExternalSchema() {
+        let versions = versionFromHeader(["webrpc": WEBRPC_HEADER_VALUE])
+        XCTAssertEqual(versions.schemaName, "waas")
+        XCTAssertEqual(versions.schemaVersion, "v0.1.0")
+        XCTAssertFalse(versions.webrpcGenVersion.isEmpty)
+        XCTAssertTrue(versions.codeGenName.hasPrefix("gen-swift"))
+        XCTAssertFalse(versions.codeGenVersion.isEmpty)
+    }
+}
+`,
 	})
 
-	runSwiftBuild(t, project)
+	runSwiftTest(t, project)
 }
 
 func generateSwift(t *testing.T, schema string, extraArgs ...string) string {

@@ -1,0 +1,20 @@
+webrpc = v1
+
+name = Helper
+version = v1.0.0
+basepath = /rpc
+
+struct Ledger
+  - amount: bigint
+  - amounts: []bigint
+  - maybe?: bigint
+
+struct Box
+  - payload: any
+
+service Helper
+  - GetUser(userId: uint64) => (code: uint32, username: string)
+  - EchoLedger(Ledger) => (Ledger)
+  - EchoBox(Box) => (Box)
+
+error 200 UserNotFound "user not found"

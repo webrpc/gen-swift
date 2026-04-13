@@ -1,0 +1,602 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.xctest/Contents/MacOS/gen-swift-integrationPackageTests",
+      "packagePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests",
+      "productName" : "gen-swift-integrationPackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.Generated-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/sources",
+      "importPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Sources/Generated/Generated.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "Generated",
+      "moduleOutputPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/Generated.swiftmodule",
+      "objects" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/Generated.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx12.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j12",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/include/Generated-Swift.h",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "tests"
+      ],
+      "outputFileMapPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/Generated.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/Generated.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Sources/Generated/Generated.swift"
+      ],
+      "tempsPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.GeneratedTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/sources",
+      "importPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Tests/GeneratedTests/GeneratedTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/Generated.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "GeneratedTests",
+      "moduleOutputPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/GeneratedTests.swiftmodule",
+      "objects" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j12",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "tests"
+      ],
+      "outputFileMapPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/GeneratedTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Tests/GeneratedTests/GeneratedTests.swift"
+      ],
+      "tempsPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.gen-swift-integrationPackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/sources",
+      "importPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/GeneratedTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "gen_swift_integrationPackageTests",
+      "moduleOutputPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/gen_swift_integrationPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx12.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j12",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/include/gen-swift-integrationPackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "tests"
+      ],
+      "outputFileMapPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules/gen_swift_integrationPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "Generated" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "Generated",
+      "-package-name",
+      "tests",
+      "-c",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Sources/Generated/Generated.swift",
+      "-I",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx12.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j12",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/include/Generated-Swift.h",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "tests",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "GeneratedTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "GeneratedTests",
+      "-package-name",
+      "tests",
+      "-c",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Tests/GeneratedTests/GeneratedTests.swift",
+      "-I",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j12",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "tests",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "gen_swift_integrationPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "gen_swift_integrationPackageTests",
+      "-package-name",
+      "tests",
+      "-c",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx12.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j12",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/include/gen-swift-integrationPackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "tests",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "Generated" : [
+
+    ],
+    "GeneratedTests" : [
+      "Generated"
+    ],
+    "gen_swift_integrationPackageTests" : [
+      "GeneratedTests",
+      "Generated"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Sources/Generated/Generated.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/sources"
+    },
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Tests/GeneratedTests/GeneratedTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/sources"
+    },
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/Generated.build/Generated.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/sources"
+    },
+    "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

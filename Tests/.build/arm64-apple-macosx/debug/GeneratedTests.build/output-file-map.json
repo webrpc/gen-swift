@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/primary.swiftdeps"
+  },
+  "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/Tests/GeneratedTests/GeneratedTests.swift": {
+    "dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.d",
+    "object": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.swift.o",
+    "swiftmodule": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.swiftdeps",
+    "diagnostics": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/GeneratedTests.build/GeneratedTests.dia"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/primary.swiftdeps"
+  },
+  "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen-swift-integrationPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.d",
+    "object": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/tarikan/Development/0xsequence/gen-swift-upstream/Tests/.build/arm64-apple-macosx/debug/gen_swift_integrationPackageTests.build/runner.dia"
+  }
+}
