@@ -178,8 +178,13 @@ public enum WebRPCJSONValue: Codable, Sendable {
     }
 }
 
+public protocol WebRPCEnumKey: Hashable, Sendable {
+    init(wireValue: String)
+    var wireValue: String { get }
+}
+
 public struct WebRPCEnumMap<Key, Value>: Codable, Sendable
-where Key: RawRepresentable & Hashable & Codable & Sendable, Key.RawValue == String, Value: Codable & Sendable {
+where Key: WebRPCEnumKey, Value: Codable & Sendable {
     public var values: [Key: Value]
 
     public init(_ values: [Key: Value] = [:]) {
@@ -194,20 +199,14 @@ where Key: RawRepresentable & Hashable & Codable & Sendable, Key.RawValue == Str
         values.reserveCapacity(rawValues.count)
 
         for (key, value) in rawValues {
-            guard let enumKey = Key(rawValue: key) else {
-                throw DecodingError.dataCorruptedError(
-                    in: container,
-                    debugDescription: "Unsupported enum key \(key)",
-                )
-            }
-            values[enumKey] = value
+            values[Key(wireValue: key)] = value
         }
 
         self.values = values
     }
 
     public func encode(to encoder: Encoder) throws {
-        let rawValues = Dictionary(uniqueKeysWithValues: values.map { ($0.key.rawValue, $0.value) })
+        let rawValues = Dictionary(uniqueKeysWithValues: values.map { ($0.key.wireValue, $0.value) })
         var container = encoder.singleValueContainer()
         try container.encode(rawValues)
     }
@@ -289,6 +288,8 @@ public struct URLSessionWebRPCTransport: WebRPCTransport, @unchecked Sendable {
                 body: data,
                 headers: responseHeaders,
             )
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             throw WebRPCTransportError(
                 message: "WebRPC HTTP request failed",
@@ -318,6 +319,8 @@ public func executeWebRPC<Response>(
             body: body,
             headers: headers,
         )
+    } catch is CancellationError {
+        throw CancellationError()
     } catch let error as WebRPCTransportError {
         throw error
     } catch {

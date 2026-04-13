@@ -163,6 +163,31 @@ final class GeneratedTests: XCTestCase {
         XCTAssertEqual(json["maybe"] as? String, "42")
     }
 
+    func testEnumMapRoundTripWorks() throws {
+        let source = Data(#"{"counts":{"Vanilla":2,"Chocolate":5,"Strawberry":7}}"#.utf8)
+        let decoded = try JSONDecoder().decode(Basket.self, from: source)
+
+        XCTAssertEqual(decoded.counts.values[.vanilla], 2)
+        XCTAssertEqual(decoded.counts.values[.chocolate], 5)
+
+        switch decoded.counts.values.keys.first(where: {
+            if case .unknown("Strawberry") = $0 { return true }
+            return false
+        }) {
+        case .some(let key):
+            XCTAssertEqual(decoded.counts.values[key], 7)
+        case .none:
+            XCTFail("expected unknown enum map key to round-trip")
+        }
+
+        let encoded = try JSONEncoder().encode(decoded)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        let counts = try XCTUnwrap(json["counts"] as? [String: NSNumber])
+        XCTAssertEqual(counts["Vanilla"], 2)
+        XCTAssertEqual(counts["Chocolate"], 5)
+        XCTAssertEqual(counts["Strawberry"], 7)
+    }
+
     func testLargeIntegerAnyRoundTripPreservesPrecision() throws {
         let source = Data(#"{"payload":9007199254740993}"#.utf8)
         let decoded = try JSONDecoder().decode(Box.self, from: source)
@@ -177,5 +202,28 @@ final class GeneratedTests: XCTestCase {
         let encoded = try JSONEncoder().encode(decoded)
         let encodedString = String(decoding: encoded, as: UTF8.self)
         XCTAssertTrue(encodedString.contains(#""payload":9007199254740993"#))
+    }
+
+    func testCancellationPassesThrough() async {
+        struct CancelledTransport: WebRPCTransport {
+            func post(
+                baseURL: String,
+                path: String,
+                body: Data,
+                headers: [String: String]
+            ) async throws -> WebRPCHTTPResponse {
+                throw CancellationError()
+            }
+        }
+
+        let client = HelperClient(baseURL: "https://example.com", transport: CancelledTransport())
+
+        do {
+            _ = try await client.getUser(HelperAPI.GetUser.Request(userId: 1))
+            XCTFail("expected cancellation")
+        } catch is CancellationError {
+        } catch {
+            XCTFail("expected CancellationError, got \(type(of: error))")
+        }
     }
 }

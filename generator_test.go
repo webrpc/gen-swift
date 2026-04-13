@@ -186,6 +186,31 @@ service Nulls
 	requireContains(t, output, "public func echo(")
 }
 
+func TestEnumMapGeneration(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = Maps
+version = v1.0.0
+basepath = /rpc
+
+enum Flavor: string
+  - Vanilla
+  - Chocolate
+
+struct Basket
+  - counts: map<Flavor, uint32>
+
+service Maps
+  - Echo(Basket) => (Basket)
+`
+
+	output := generateSwift(t, schema)
+	requireContains(t, output, "public enum Flavor: Codable, Hashable, Sendable, WebRPCEnumKey")
+	requireContains(t, output, "public init(wireValue: String)")
+	requireContains(t, output, "public let counts: WebRPCEnumMap<Flavor, UInt32>")
+}
+
 func TestServiceNameCollisionGeneration(t *testing.T) {
 	schema := `
 webrpc = v1

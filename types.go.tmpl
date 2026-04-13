@@ -8,7 +8,7 @@
 {{range $_i, $type := $types}}{{if gt $_i 0}}
 
 {{end}}{{if isEnumType $type}}
-public enum {{$type.Name}}: Codable, Sendable {
+public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     {{- range $_, $field := $type.Fields}}
     case {{template "swiftLowerCamel" dict "Name" $field.Name}}
     {{- end}}
@@ -25,18 +25,21 @@ public enum {{$type.Name}}: Codable, Sendable {
         }
     }
 
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let value = try container.decode(String.self)
-
-        switch value {
+    public init(wireValue: String) {
+        switch wireValue {
         {{- range $_, $field := $type.Fields}}
         case "{{$field.Name}}":
             self = .{{template "swiftLowerCamel" dict "Name" $field.Name}}
         {{- end}}
         default:
-            self = .unknown(value)
+            self = .unknown(wireValue)
         }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        self = {{$type.Name}}(wireValue: value)
     }
 
     public func encode(to encoder: Encoder) throws {
