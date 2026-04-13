@@ -331,7 +331,17 @@ public func executeWebRPC<Response>(
         throw decodeWebRPCError(statusCode: response.statusCode, data: response.body)
     }
 
-    return try decodeSuccess(response.body, WebRPCJSON.makeDecoder())
+    do {
+        return try decodeSuccess(response.body, WebRPCJSON.makeDecoder())
+    } catch let error as WebRPCError {
+        throw error
+    } catch {
+        throw webRPCBadResponseError(
+            statusCode: response.statusCode,
+            data: response.body,
+            cause: String(describing: error)
+        )
+    }
 }
 
 public enum WebRPCErrorKind: Sendable {
@@ -424,14 +434,27 @@ public func decodeWebRPCError(
             kind: WebRPCErrorKind.fromCode(code),
         )
     } catch {
-        return WebRPCError(
-            error: "WebrpcBadResponse",
-            code: WebRPCErrorKind.unknown.code,
-            message: "Unable to decode error response",
-            cause: String(data: data, encoding: .utf8) ?? "<non-utf8 body>",
-            status: statusCode,
-            kind: .unknown,
+        return webRPCBadResponseError(
+            statusCode: statusCode,
+            data: data,
+            cause: "Unable to decode error response"
         )
     }
+}
+
+private func webRPCBadResponseError(
+    statusCode: Int,
+    data: Data,
+    cause: String
+) -> WebRPCError {
+    let bodyText = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+    return WebRPCError(
+        error: "WebrpcBadResponse",
+        code: WebRPCErrorKind.webrpcBadResponse.code,
+        message: "bad response",
+        cause: "\(cause): \(bodyText)",
+        status: statusCode,
+        kind: .webrpcBadResponse
+    )
 }
 {{end}}

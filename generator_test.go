@@ -367,6 +367,38 @@ final class GeneratedTests: XCTestCase {
         }
     }
 
+    func testMalformedSuccessBodyBecomesWebrpcBadResponse() async throws {
+        struct BadTransport: WebRPCTransport {
+            func post(
+                baseURL: String,
+                path: String,
+                body: Data,
+                headers: [String: String]
+            ) async throws -> WebRPCHTTPResponse {
+                WebRPCHTTPResponse(statusCode: 200, body: Data("not-json".utf8))
+            }
+        }
+
+        let client = HelperClient(baseURL: "https://example.com", transport: BadTransport())
+
+        do {
+            _ = try await client.getUser(HelperAPI.GetUser.Request(userId: 1))
+            XCTFail("expected error")
+        } catch let error as WebRPCError {
+            XCTAssertEqual(error.error, "WebrpcBadResponse")
+            XCTAssertEqual(error.code, WebRPCErrorKind.webrpcBadResponse.code)
+            switch error.kind {
+            case .webrpcBadResponse:
+                break
+            default:
+                XCTFail("expected webrpcBadResponse kind")
+            }
+            XCTAssertTrue(error.cause.contains("not-json"))
+        } catch {
+            XCTFail("expected WebRPCError, got \(type(of: error))")
+        }
+    }
+
     func testClientSendsWebrpcHeaderAndParsesVersions() async throws {
         actor Recorder {
             private(set) var headers: [String: String] = [:]
