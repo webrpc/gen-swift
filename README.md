@@ -13,17 +13,15 @@ webrpc Swift client code.
 
 ## Usage
 
-```sh
-webrpc-gen -schema=example.ridl -target=swift -client -out=./ExampleClient.swift
-```
+`gen-swift` is not added to `webrpc-gen` as a built-in `-target=swift` target yet.
 
-or:
+Use the Swift generator repo as the target instead:
 
 ```sh
 webrpc-gen -schema=example.ridl -target=github.com/webrpc/gen-swift@latest -client -out=./ExampleClient.swift
 ```
 
-or:
+Or point `-target` at a local checkout of this repo:
 
 ```sh
 webrpc-gen -schema=example.ridl -target=./local-templates-on-disk -client -out=./ExampleClient.swift
@@ -39,6 +37,9 @@ Generated output includes:
 - transport/error helpers
 - service metadata helpers
 - high-level async client methods
+
+The generated client targets Swift 5.9+. The built-in `URLSession` transport is intended
+for modern Apple concurrency platforms such as iOS 15+ and macOS 12+.
 
 Low-level helpers remain visible:
 
@@ -75,14 +76,18 @@ Swift compilation and runtime coverage:
 ./Tests/test.sh
 ```
 
-That script regenerates `Tests/Sources/Generated/Generated.swift` from
-`Tests/test.ridl` and runs `swift test` against a shared SwiftPM package.
+That script clears stale SwiftPM build artifacts, regenerates
+`Tests/Sources/Generated/Generated.swift` from `Tests/test.ridl`, and runs `swift test`
+against a shared SwiftPM package.
 
 The real external-schema integration remains available as an opt-in Go test:
 
 ```sh
 WEBRPC_SWIFT_EXTERNAL_SCHEMA=1 go test ./...
 ```
+
+CI runs the fast Go suite on every PR and push to `master`, and runs the shared Swift
+integration suite on `macos-latest`.
 
 ## Options
 
