@@ -28,7 +28,16 @@
 {{- end -}}
 {{- $candidate = camelCase $candidate -}}
 
-{{- if in $candidate "associatedtype" "class" "deinit" "enum" "extension" "fileprivate" "func" "import" "init" "inout" "internal" "let" "operator" "private" "protocol" "public" "static" "struct" "subscript" "typealias" "var" "break" "case" "continue" "default" "defer" "do" "else" "fallthrough" "for" "guard" "if" "in" "repeat" "return" "switch" "where" "while" "as" "Any" "catch" "false" "is" "nil" "rethrows" "super" "self" "Self" "throw" "throws" "true" "try" "Type" "Protocol" -}}
+{{- if in $candidate
+    "actor" "any" "as" "associatedtype" "async" "await" "borrowing" "break" "case" "catch" "class" "consuming"
+    "continue" "convenience" "default" "defer" "deinit" "didSet" "distributed" "do" "dynamic" "each" "else"
+    "enum" "extension" "fallthrough" "false" "fileprivate" "for" "func" "get" "guard" "if" "import" "in"
+    "infix" "init" "inout" "internal" "is" "isolated" "lazy" "left" "let" "mutating" "nil" "none"
+    "nonisolated" "open" "operator" "optional" "override" "package" "postfix" "precedencegroup" "prefix"
+    "private" "protocol" "public" "repeat" "required" "rethrows" "return" "right" "self" "set" "some"
+    "static" "struct" "subscript" "super" "switch" "throw" "throws" "true" "try" "typealias" "unowned"
+    "var" "weak" "where" "while" "willSet" "yield"
+ -}}
     {{- printf "`%s`" $candidate -}}
 {{- else -}}
     {{- $candidate -}}

@@ -142,6 +142,35 @@ error 7001 OAuthError "oauth error"
 	requireContains(t, output, "case oauthError")
 }
 
+func TestFieldNamesEscapeSwiftKeywords(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = Keywords
+version = v1.0.0
+basepath = /rpc
+
+struct Demo
+  - await: string
+  - precedencegroup: string
+
+service Keywords
+  - Echo(Demo) => (Demo)
+`
+
+	output := generateSwift(t, schema)
+	requireContains(t, output, "public let `await`: String")
+	requireContains(t, output, "public let `precedencegroup`: String")
+	requireContains(t, output, "case `await` = \"await\"")
+	requireContains(t, output, "case `precedencegroup` = \"precedencegroup\"")
+
+	project := writeSwiftPackage(t, "keyword-fields", map[string]string{
+		"Sources/Generated/Generated.swift": output,
+	})
+
+	runSwiftBuild(t, project)
+}
+
 func TestNullOptionalGeneration(t *testing.T) {
 	schema := `
 webrpc = v1
@@ -392,6 +421,53 @@ final class GeneratedTests: XCTestCase {
             WebRPCHTTPResponse(statusCode: 200, body: Data(), headers: ["Webrpc": WEBRPC_HEADER_VALUE])
         )
         XCTAssertEqual(responseVersions, versions)
+    }
+}
+`,
+	})
+
+	runSwiftTest(t, project)
+}
+
+func TestAnyIntegerRoundTripPreservesPrecision(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = AnyValue
+version = v1.0.0
+basepath = /rpc
+
+struct Box
+  - payload: any
+
+service AnyValue
+  - Echo(Box) => (Box)
+`
+
+	output := generateSwift(t, schema)
+
+	project := writeSwiftPackage(t, "any-integer", map[string]string{
+		"Sources/Generated/Generated.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testLargeIntegerRoundTripPreservesPrecision() throws {
+        let source = Data(#"{"payload":9007199254740993}"#.utf8)
+        let decoded = try JSONDecoder().decode(Box.self, from: source)
+
+        switch decoded.payload {
+        case .integer(let value):
+            XCTAssertEqual(value, 9_007_199_254_740_993)
+        default:
+            XCTFail("expected integer payload")
+        }
+
+        let encoded = try JSONEncoder().encode(decoded)
+        let encodedString = String(decoding: encoded, as: UTF8.self)
+        XCTAssertTrue(encodedString.contains(#""payload":9007199254740993"#))
     }
 }
 `,

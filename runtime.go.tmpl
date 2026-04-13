@@ -121,6 +121,8 @@ public enum WebRPCJSONValue: Codable, Sendable {
     case object([String: WebRPCJSONValue])
     case array([WebRPCJSONValue])
     case string(String)
+    case integer(Int64)
+    case unsignedInteger(UInt64)
     case number(Double)
     case bool(Bool)
     case null
@@ -133,7 +135,9 @@ public enum WebRPCJSONValue: Codable, Sendable {
         } else if let value = try? container.decode(Bool.self) {
             self = .bool(value)
         } else if let value = try? container.decode(Int64.self) {
-            self = .number(Double(value))
+            self = .integer(value)
+        } else if let value = try? container.decode(UInt64.self) {
+            self = .unsignedInteger(value)
         } else if let value = try? container.decode(Double.self) {
             self = .number(value)
         } else if let value = try? container.decode(String.self) {
@@ -159,6 +163,10 @@ public enum WebRPCJSONValue: Codable, Sendable {
         case .array(let value):
             try container.encode(value)
         case .string(let value):
+            try container.encode(value)
+        case .integer(let value):
+            try container.encode(value)
+        case .unsignedInteger(let value):
             try container.encode(value)
         case .number(let value):
             try container.encode(value)
