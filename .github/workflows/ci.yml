@@ -42,10 +42,8 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v3
-        with:
-          swift-version: "5.9"
+      - name: Show Swift version
+        run: swift --version
 
       - name: Run shared Swift integration suite
         run: ./Tests/test.sh
