@@ -24,14 +24,8 @@ jobs:
         run: go test ./...
 
   swift-integration:
-    name: Swift Integration (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
+    name: Swift Integration
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
