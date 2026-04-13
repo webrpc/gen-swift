@@ -1,27 +1,17 @@
-// swift-tools-version: 5.8
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
-    name: "gen-swift",
-    platforms: [.macOS(.v13), .iOS(.v15)],
-    products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "gen-swift",
-            targets: ["gen-swift"]),
-
+    name: "gen-swift-integration",
+    platforms: [
+        .macOS(.v12),
+        .iOS(.v15),
     ],
-    dependencies: [.package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.7")],
+    products: [
+        .library(name: "Generated", targets: ["Generated"]),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "gen-swift",
-            dependencies: ["AnyCodable"]),
-        .testTarget(
-            name: "gen-swiftTests",
-            dependencies: ["gen-swift"]),
+        .target(name: "Generated"),
+        .testTarget(name: "GeneratedTests", dependencies: ["Generated"]),
     ]
 )

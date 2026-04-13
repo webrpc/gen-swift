@@ -1,73 +1,119 @@
-/Users/danielrutkovsky/Developer/gen-typescript/types.go.tmpl{{define "types"}}
+{{define "types"}}
 
 {{- $typeMap := .TypeMap -}}
 {{- $types := .Types -}}
-{{- $services := .Services -}}
 
+{{if $types}}
 // MARK: - Types
+{{range $_i, $type := $types}}{{if gt $_i 0}}
 
-{{- if $types -}}
-{{range $_i, $type := $types -}}
-
-{{if isEnumType $type }}
-public enum {{$type.Name}}: String, Codable {
-{{- range $_, $field := $type.Fields}}
-    case {{camelCase $field.Name}} = "{{$field.Name}}"
-{{- end}}
-}
-{{end -}}
-
-{{- if isStructType $type }}
-public struct {{$type.Name}}: Codable {
+{{end}}{{if isEnumType $type}}
+public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     {{- range $_, $field := $type.Fields}}
-    {{- $isExportable := true -}}
-    {{- range $meta := $field.Meta -}}
-        {{- if exists $meta "json" -}}
-            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
-                {{- $isExportable = false}}
-            {{- end -}}
-        {{- end -}}
-    {{- end }}
-    {{- if $isExportable }}
-    let {{template "fieldName" dict "Field" .}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap}}{{if .Optional}}?{{end}}
-    {{- end -}}
+    case {{template "swiftLowerCamel" dict "Name" $field.Name}}
     {{- end}}
+    case unknown(String)
 
-    {{- if $type.Fields}}
-
-     enum CodingKeys: String, CodingKey {
-    {{- range $_, $field := $type.Fields}}
-    {{- $isExportable := true -}}
-    {{- range $meta := $field.Meta -}}
-        {{- if exists $meta "json" -}}
-            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
-                {{- $isExportable = false}}
-            {{- end -}}
-        {{- end -}}
-    {{- end }}
-    {{- if $isExportable }}
-        case {{template "fieldName" dict "Field" .}} = "{{template "codingKey" dict "Field" .}}"
-    {{- end -}}
-    {{- end}}
+    public var wireValue: String {
+        switch self {
+        {{- range $_, $field := $type.Fields}}
+        case .{{template "swiftLowerCamel" dict "Name" $field.Name}}:
+            return "{{$field.Name}}"
+        {{- end}}
+        case .unknown(let value):
+            return value
+        }
     }
 
+    public init(wireValue: String) {
+        switch wireValue {
+        {{- range $_, $field := $type.Fields}}
+        case "{{$field.Name}}":
+            self = .{{template "swiftLowerCamel" dict "Name" $field.Name}}
+        {{- end}}
+        default:
+            self = .unknown(wireValue)
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        self = {{$type.Name}}(wireValue: value)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wireValue)
+    }
+}
+{{else if isAliasType $type}}
+public typealias {{$type.Name}} = {{template "type" dict "Type" $type.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}
+{{else if isStructType $type}}
+public struct {{$type.Name}}: Codable, Sendable {
+    {{- range $_, $field := $type.Fields}}
+    {{- $isExportable := true -}}
+    {{- range $meta := $field.Meta -}}
+        {{- if exists $meta "json" -}}
+            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                {{- $isExportable = false -}}
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if $isExportable }}
+    public let {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}?{{end}}
+    {{- end -}}
     {{- end}}
-}
-{{end -}}
-{{end -}}
-{{end -}}
 
-{{if $services}}
-{{- range $_, $service := $services}}
-public protocol {{$service.Name}} {
-{{- range $_, $method := $service.Methods}}
-    {{ $generateHeaders := "false" -}}
-    func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}}
-    {{ $generateHeaders := "true" -}}
-    func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} 
-{{- end }}
-}
-{{- end -}}
-{{end -}}
+    public init(
+        {{- $first := true -}}
+        {{- range $_, $field := $type.Fields}}
+            {{- $isExportable := true -}}
+            {{- range $meta := $field.Meta -}}
+                {{- if exists $meta "json" -}}
+                    {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                        {{- $isExportable = false -}}
+                    {{- end -}}
+                {{- end -}}
+            {{- end -}}
+            {{- if $isExportable -}}
+                {{- if not $first }}, {{end -}}
+                {{- $first = false -}}
+                {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}? = nil{{end}}
+            {{- end -}}
+        {{- end}}
+    ) {
+        {{- range $_, $field := $type.Fields}}
+            {{- $isExportable := true -}}
+            {{- range $meta := $field.Meta -}}
+                {{- if exists $meta "json" -}}
+                    {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                        {{- $isExportable = false -}}
+                    {{- end -}}
+                {{- end -}}
+            {{- end -}}
+            {{- if $isExportable }}
+        self.{{template "fieldName" dict "Field" $field}} = {{template "fieldName" dict "Field" $field}}
+            {{- end -}}
+        {{- end}}
+    }
 
+    enum CodingKeys: String, CodingKey {
+        {{- range $_, $field := $type.Fields}}
+            {{- $isExportable := true -}}
+            {{- range $meta := $field.Meta -}}
+                {{- if exists $meta "json" -}}
+                    {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                        {{- $isExportable = false -}}
+                    {{- end -}}
+                {{- end -}}
+            {{- end -}}
+            {{- if $isExportable }}
+        case {{template "fieldName" dict "Field" $field}} = "{{template "codingKey" dict "Field" $field}}"
+            {{- end -}}
+        {{- end}}
+    }
+}
+{{end}}{{end}}
+{{end}}
 {{end}}

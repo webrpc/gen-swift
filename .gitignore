@@ -1,12 +1,2 @@
-.DS_Store
-/.build
-/Packages
-/*.xcodeproj
-xcuserdata/
-DerivedData/
-.netrc
-.build
-.swiftpm
-Package.resolved
-client.swift
-node_modules
+Tests/.build/
+Tests/Sources/Generated/Generated.swift

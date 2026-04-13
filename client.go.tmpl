@@ -1,123 +1,271 @@
 {{define "client"}}
 
+{{- $basePath := .BasePath -}}
+{{- $schemaName := .SchemaName -}}
+{{- $schemaPrefix := pascalCase $schemaName -}}
 {{- $typeMap := .TypeMap -}}
-
-{{- if .Services -}}
-// MARK: - Client
-
-{{- range $service := .Services}}
-{{- range $_, $method := $service.Methods -}}
-{{- if gt (len $method.Inputs) 0 -}}
-private struct {{$method.Name}}Request: Codable {
-{{- range $_, $input := $method.Inputs}}
-    let {{$input.Name}}: {{template "type" dict "Type" $input.Type "TypeMap" $typeMap}}{{if $input.Optional}}?{{end}}
-{{- end}}
-}
+{{- $types := .Types -}}
+{{- $opts := .Opts -}}
+{{- $reservedTypeNames := dict -}}
+{{- range $_, $type := $types -}}
+    {{- set $reservedTypeNames $type.Name true -}}
 {{- end -}}
+{{- $usedAPINames := dict -}}
+{{- $usedClientNames := dict -}}
 
-{{- if gt (len $method.Outputs) 0 }}
-private struct {{$method.Name}}Response: Codable {
-{{- range $_, $output := $method.Outputs}}
-    let {{$output.Name}}: {{template "type" dict "Type" $output.Type "TypeMap" $typeMap}}{{if $output.Optional}}?{{end}}
-{{- end}}
-}
+{{- if .Services}}
+{{range $serviceIndex, $service := .Services}}{{if gt $serviceIndex 0}}
+
 {{end}}
-{{end -}}
+{{- $serviceBaseName := ternary (hasPrefix $service.Name $schemaPrefix) $service.Name (printf "%s%s" $schemaPrefix $service.Name) -}}
+{{- $serviceAPIState := dict "name" "" "selected" false -}}
+{{- range $_, $candidate := (list (printf "%sAPI" $serviceBaseName) (printf "%sServiceAPI" $serviceBaseName) (printf "%sWebRPCAPI" $serviceBaseName) (printf "%sGeneratedRPCAPI" $serviceBaseName) (printf "%sGeneratedRPCAPI%d" $serviceBaseName $serviceIndex)) -}}
+    {{- if not (get $serviceAPIState "selected") -}}
+        {{- $collisionState := dict "collision" false -}}
+        {{- if or (exists $reservedTypeNames $candidate) (exists $usedAPINames $candidate) -}}
+            {{- set $collisionState "collision" true -}}
+        {{- end -}}
+        {{- if not (get $collisionState "collision") -}}
+            {{- set $serviceAPIState "name" $candidate -}}
+            {{- set $serviceAPIState "selected" true -}}
+            {{- set $usedAPINames $candidate true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- $serviceAPIName := get $serviceAPIState "name" -}}
+{{- $serviceClientState := dict "name" "" "selected" false -}}
+{{- range $_, $candidate := (list (printf "%sClient" $serviceBaseName) (printf "%sServiceClient" $serviceBaseName) (printf "%sWebRPCClient" $serviceBaseName) (printf "%sGeneratedRPCClient" $serviceBaseName) (printf "%sGeneratedRPCClient%d" $serviceBaseName $serviceIndex)) -}}
+    {{- if not (get $serviceClientState "selected") -}}
+        {{- $collisionState := dict "collision" false -}}
+        {{- if or (exists $reservedTypeNames $candidate) (exists $usedClientNames $candidate) -}}
+            {{- set $collisionState "collision" true -}}
+        {{- end -}}
+        {{- if not (get $collisionState "collision") -}}
+            {{- set $serviceClientState "name" $candidate -}}
+            {{- set $serviceClientState "selected" true -}}
+            {{- set $usedClientNames $candidate true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- $serviceClientName := get $serviceClientState "name" -}}
+public enum {{$serviceAPIName}} {
+    public static let basePath = "{{$basePath}}{{$service.Name}}"
+{{- range $_, $method := $service.Methods}}
 
-public class {{.Name}}Client {
-    private let hostname: String
-    private let apiPath = "/rpc/{{.Name}}/"
-    private let urlSession: URLSession
+    public enum {{$method.Name}} {
+        public static let path = "/{{$method.Name}}"
+        public static let urlPath = "{{$basePath}}{{$service.Name}}/{{$method.Name}}"
+        {{- if and (not $method.Succinct) (gt (len $method.Inputs) 0) }}
 
-    private lazy var jsonDecoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        return decoder
-    }()
+        public struct Request: Codable, Sendable {
+            {{- range $_, $field := $method.Inputs}}
+                {{- $isExportable := true -}}
+                {{- range $meta := $field.Meta -}}
+                    {{- if exists $meta "json" -}}
+                        {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                            {{- $isExportable = false -}}
+                        {{- end -}}
+                    {{- end -}}
+                {{- end -}}
+                {{- if $isExportable }}
+            public let {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}?{{end}}
+                {{- end -}}
+            {{- end}}
 
-    private struct Empty: Codable {}
-
-    public init(hostname: String, urlSession: URLSession = URLSession.shared) {
-        self.hostname = hostname
-        self.urlSession = urlSession
-    }
-
-    private func getURL(for service: String) -> String {
-        "\(hostname)\(apiPath)\(service)"
-    }
-
-    private func sendRequest(url: String, headers: [String: String]?, data: Data? = nil) async throws {
-        let _: Empty? = try await sendRequest(url: url, headers: headers, data: data)
-    }
-
-    @discardableResult
-    private func sendRequest<T: Decodable>(
-        url: String,
-        headers: [String: String]?,
-        data: Data? = nil) async throws -> T {
-            var request = URLRequest(url: URL(string: url)!)
-            request.httpMethod = "POST"
-            headers?.forEach {
-                request.setValue($0.value, forHTTPHeaderField: $0.key)
+            public init(
+                {{- $first := true -}}
+                {{- range $_, $field := $method.Inputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable -}}
+                        {{- if not $first }}, {{end -}}
+                        {{- $first = false -}}
+                        {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}? = nil{{end}}
+                    {{- end -}}
+                {{- end}}
+            ) {
+                {{- range $_, $field := $method.Inputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable }}
+                self.{{template "fieldName" dict "Field" $field}} = {{template "fieldName" dict "Field" $field}}
+                    {{- end -}}
+                {{- end}}
             }
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = data
-            let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw WebrpcError(error: "Unknown error", code: -999, message: nil, cause: nil, status: -999, errorKind: .unknownError)
-            }
-
-            switch httpResponse.statusCode {
-            case 200..<300:
-                let decoded = try jsonDecoder.decode(T.self, from: data)
-                return decoded
-            default:
-                if let decoded = try? jsonDecoder.decode(WebrpcError.self, from: data) {
-                    throw decoded
-                }
-
-                throw WebrpcError(error: "Unknown error", code: -999, message: nil, cause: nil, status: httpResponse.statusCode, errorKind: .unknownError)
+            enum CodingKeys: String, CodingKey {
+                {{- range $_, $field := $method.Inputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable }}
+                case {{template "fieldName" dict "Field" $field}} = "{{template "codingKey" dict "Field" $field}}"
+                    {{- end -}}
+                {{- end}}
             }
         }
-    }
+        {{- end }}
+        {{- if and (not $method.Succinct) (gt (len $method.Outputs) 0) }}
 
-extension {{.Name}}Client: {{.Name}} {
-  {{- range $_, $method := .Methods}}
-    {{ $generateHeaders := "false" -}}
-    public func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} {
-        try await {{firstLetterToLower $method.Name}}(
-        {{- range $i, $input := $method.Inputs}}
-            {{- if $i}}, {{end}}{{$input.Name}}: {{$input.Name}}
-        {{- end -}}
-        {{- if (gt (len $method.Inputs) 0)}}, {{end}}headers: nil)
-    }
+        public struct Response: Codable, Sendable {
+            {{- range $_, $field := $method.Outputs}}
+                {{- $isExportable := true -}}
+                {{- range $meta := $field.Meta -}}
+                    {{- if exists $meta "json" -}}
+                        {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                            {{- $isExportable = false -}}
+                        {{- end -}}
+                    {{- end -}}
+                {{- end -}}
+                {{- if $isExportable }}
+            public let {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}?{{end}}
+                {{- end -}}
+            {{- end}}
 
-    {{$generateHeaders := "true" -}}
-    public func {{firstLetterToLower $method.Name}}({{template "methodInputs" dict "Method" $method "TypeMap" $typeMap "GenerateHeaders" $generateHeaders}}) async throws {{- if gt (len $method.Outputs) 0}}-> {{end}}{{template "methodOutputs" dict "Method" $method "TypeMap" $typeMap}} {
-        {{- if (gt (len $method.Inputs) 0)}}
-        let request = {{$method.Name}}Request(
-        {{- range $i, $input := $method.Inputs}}
-            {{- if $i}}, {{end}}{{$input.Name}}: {{$input.Name}}
-        {{- end -}}
-        )
-        {{- end}}
-        {{if (gt (len $method.Outputs) 0)}}let response: {{$method.Name}}Response = {{ end -}}try await sendRequest(url: getURL(for: "{{.Name}}"), headers: headers{{ternary (gt (.Inputs | len) 0) ", data: try JSONEncoder().encode(request)" "" -}})
-        {{- if (eq (len $method.Outputs) 1)}}
-        return {{range $i, $output := $method.Outputs -}}
-            response.{{$output.Name}}
-        {{- end -}}
-        {{- end}}
-        {{- if (gt (len $method.Outputs) 1)}}
-        return ({{- range $i, $output := $method.Outputs}}
-            {{- if $i}}, {{end}}{{$output.Name}}: response.{{$output.Name}}
-        {{- end -}})
-        {{- end}}
+            public init(
+                {{- $first := true -}}
+                {{- range $_, $field := $method.Outputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable -}}
+                        {{- if not $first }}, {{end -}}
+                        {{- $first = false -}}
+                        {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}? = nil{{end}}
+                    {{- end -}}
+                {{- end}}
+            ) {
+                {{- range $_, $field := $method.Outputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable }}
+                self.{{template "fieldName" dict "Field" $field}} = {{template "fieldName" dict "Field" $field}}
+                    {{- end -}}
+                {{- end}}
+            }
+
+            enum CodingKeys: String, CodingKey {
+                {{- range $_, $field := $method.Outputs}}
+                    {{- $isExportable := true -}}
+                    {{- range $meta := $field.Meta -}}
+                        {{- if exists $meta "json" -}}
+                            {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                                {{- $isExportable = false -}}
+                            {{- end -}}
+                        {{- end -}}
+                    {{- end -}}
+                    {{- if $isExportable }}
+                case {{template "fieldName" dict "Field" $field}} = "{{template "codingKey" dict "Field" $field}}"
+                    {{- end -}}
+                {{- end}}
+            }
+        }
+        {{- end }}
+
+        {{- if eq (len $method.Inputs) 0 }}
+        public static func encodeRequest(encoder _: JSONEncoder = WebRPCJSON.makeEncoder()) throws -> Data {
+            Data("{}".utf8)
+        }
+        {{- else }}
+        public static func encodeRequest(
+            _ request: {{if $method.Succinct}}{{template "type" dict "Type" (index $method.Inputs 0).Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{else}}Request{{end}},
+            encoder: JSONEncoder = WebRPCJSON.makeEncoder()
+        ) throws -> Data {
+            try encoder.encode(request)
+        }
+        {{- end }}
+        {{- if eq (len $method.Outputs) 0 }}
+
+        public static func decodeResponse(_ data: Data, decoder _: JSONDecoder = WebRPCJSON.makeDecoder()) throws {
+            _ = data
+            return
+        }
+        {{- else }}
+
+        public static func decodeResponse(
+            _ data: Data,
+            decoder: JSONDecoder = WebRPCJSON.makeDecoder()
+        ) throws -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}} {
+            try decoder.decode({{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}.self, from: data)
+        }
+        {{- end }}
     }
-  {{end}}
+{{- end}}
 }
-{{end -}}
-{{end -}}
+
+public struct {{$serviceClientName}}: Sendable {
+    public let baseURL: String
+    public let transport: any WebRPCTransport
+    public let headers: @Sendable () -> [String: String]
+
+    public init(
+        baseURL: String,
+        transport: any WebRPCTransport = URLSessionWebRPCTransport(),
+        headers: @escaping @Sendable () -> [String: String] = { [:] }
+    ) {
+        self.baseURL = baseURL
+        self.transport = transport
+        self.headers = headers
+    }
+    {{- range $_, $method := $service.Methods}}
+
+    public func {{template "swiftLowerCamel" dict "Name" $method.Name}}({{template "methodInputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}) async throws{{if gt (len $method.Outputs) 0}} -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}{{end}} {
+        let body = try {{$serviceAPIName}}.{{$method.Name}}.encodeRequest({{if gt (len $method.Inputs) 0}}request{{end}})
+        let requestHeaders = makeWebRPCHeaders(
+            headers(),
+            includeWebRPCHeader: {{if eq (get $opts "webrpcHeader") true}}true{{else}}false{{end}}
+        )
+        {{- if eq (len $method.Outputs) 0 }}
+        _ = try await executeWebRPC(
+            baseURL: baseURL,
+            urlPath: {{$serviceAPIName}}.{{$method.Name}}.urlPath,
+            body: body,
+            transport: transport,
+            headers: requestHeaders,
+            decodeSuccess: {{$serviceAPIName}}.{{$method.Name}}.decodeResponse,
+        )
+        return
+        {{- else }}
+        return try await executeWebRPC(
+            baseURL: baseURL,
+            urlPath: {{$serviceAPIName}}.{{$method.Name}}.urlPath,
+            body: body,
+            transport: transport,
+            headers: requestHeaders,
+            decodeSuccess: {{$serviceAPIName}}.{{$method.Name}}.decodeResponse,
+        )
+        {{- end }}
+    }
+    {{- end}}
+}
+{{end}}
+{{- end}}
 {{end}}

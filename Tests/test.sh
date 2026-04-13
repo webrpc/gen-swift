@@ -1,13 +1,15 @@
-#!/bin/bash
-set -e
+#!/bin/sh
+set -eu
 
-webrpc-test -version
-webrpc-test -print-schema > ./test.ridl
-webrpc-gen -schema=./test.ridl -target=../ -client -out=./Sources/gen-swift/client.swift
+script_dir=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
 
-webrpc-test -server -port=9988 -timeout=5s &
+mkdir -p "$script_dir/Sources/Generated"
 
-# Wait until http://localhost:9988 is available, up to 10s.
-for (( i=0; i<100; i++ )); do nc -z localhost 9988 && break || sleep 0.1; done
+go -C "$repo_root/tools" tool webrpc-gen \
+  -schema="$script_dir/test.ridl" \
+  -target="$repo_root" \
+  -client \
+  -out="$script_dir/Sources/Generated/Generated.swift"
 
-swift test
+swift test --package-path "$script_dir"
