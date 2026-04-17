@@ -211,6 +211,57 @@ service Maps
 	requireContains(t, output, "public let counts: WebRPCEnumMap<Flavor, UInt32>")
 }
 
+func TestExplicitEnumWireValuesRuntime(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = EnumWire
+version = v1.0.0
+basepath = /rpc
+
+enum WalletType: string
+  - Ethereum = "ethereum"
+  - SmartWallet = "smart-wallet"
+
+struct EchoRequest
+  - walletType: WalletType
+
+service EnumWire
+  - Echo(EchoRequest) => (EchoRequest)
+`
+
+	output := generateSwift(t, schema)
+	requireContains(t, output, `return "ethereum"`)
+	requireContains(t, output, `case "smart-wallet":`)
+
+	project := writeSwiftPackage(t, "enum-wire-values", map[string]string{
+		"Sources/Generated/Client.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testExplicitEnumWireValuesRoundTrip() throws {
+        let body = try EnumWireAPI.Echo.encodeRequest(EchoRequest(walletType: .ethereum))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["walletType"] as? String, "ethereum")
+
+        let responseData = try XCTUnwrap(#"{"walletType":"smart-wallet"}"#.data(using: .utf8))
+        let response = try EnumWireAPI.Echo.decodeResponse(responseData)
+        XCTAssertEqual(response.walletType, .smartWallet)
+    }
+
+    func testUnknownEnumWireValuePreserved() {
+        XCTAssertEqual(WalletType(wireValue: "unexpected"), .unknown("unexpected"))
+    }
+}
+`,
+	})
+
+	runSwiftTest(t, project)
+}
+
 func TestServiceNameCollisionGeneration(t *testing.T) {
 	schema := `
 webrpc = v1
