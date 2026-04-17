@@ -18,7 +18,11 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
         switch self {
         {{- range $_, $field := $type.Fields}}
         case .{{template "swiftLowerCamel" dict "Name" $field.Name}}:
+            {{- if eq $type.Type.Expr "string" }}
+            return "{{$field.Value}}"
+            {{- else }}
             return "{{$field.Name}}"
+            {{- end }}
         {{- end}}
         case .unknown(let value):
             return value
@@ -28,7 +32,11 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     public init(wireValue: String) {
         switch wireValue {
         {{- range $_, $field := $type.Fields}}
+            {{- if eq $type.Type.Expr "string" }}
+        case "{{$field.Value}}":
+            {{- else }}
         case "{{$field.Name}}":
+            {{- end }}
             self = .{{template "swiftLowerCamel" dict "Name" $field.Name}}
         {{- end}}
         default:
