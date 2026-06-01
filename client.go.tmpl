@@ -48,25 +48,38 @@
     {{- end -}}
 {{- end -}}
 {{- $serviceClientName := get $serviceClientState "name" -}}
+{{- $methodAPINames := dict -}}
 {{- $usedMethodNames := dict -}}
-public enum {{$serviceAPIName}} {
-    public static let basePath = "{{$basePath}}{{$service.Name}}"
-{{- range $methodIndex, $method := $service.Methods}}
+{{- range $methodIndex, $method := $service.Methods -}}
 {{- $methodAPIState := dict "name" "" "selected" false -}}
-{{- range $_, $candidate := (list $method.Name (printf "%sMethod" $method.Name) (printf "%sRPC" $method.Name) (printf "%sGeneratedRPC" $method.Name) (printf "%sGeneratedRPC%d" $method.Name $methodIndex)) -}}
+{{- range $_, $candidate := (list $method.Name (printf "%sMethod" $method.Name) (printf "%sRPC" $method.Name) (printf "%sGeneratedRPC" $method.Name)) -}}
     {{- if not (get $methodAPIState "selected") -}}
-        {{- $collisionState := dict "collision" false -}}
-        {{- if or (exists $reservedTypeNames $candidate) (exists $usedMethodNames $candidate) -}}
-            {{- set $collisionState "collision" true -}}
-        {{- end -}}
-        {{- if not (get $collisionState "collision") -}}
+        {{- if not (or (exists $reservedTypeNames $candidate) (exists $usedMethodNames $candidate)) -}}
             {{- set $methodAPIState "name" $candidate -}}
             {{- set $methodAPIState "selected" true -}}
             {{- set $usedMethodNames $candidate true -}}
         {{- end -}}
     {{- end -}}
 {{- end -}}
-{{- $methodAPIName := get $methodAPIState "name" }}
+{{- range $suffix := until 10000 -}}
+    {{- if not (get $methodAPIState "selected") -}}
+        {{- $candidate := printf "%sGeneratedRPC%d" $method.Name $suffix -}}
+        {{- if not (or (exists $reservedTypeNames $candidate) (exists $usedMethodNames $candidate)) -}}
+            {{- set $methodAPIState "name" $candidate -}}
+            {{- set $methodAPIState "selected" true -}}
+            {{- set $usedMethodNames $candidate true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- if not (get $methodAPIState "selected") -}}
+    {{- fail (printf "unable to choose unique Swift API name for method %q" $method.Name) -}}
+{{- end -}}
+{{- set $methodAPINames (printf "%d" $methodIndex) (get $methodAPIState "name") -}}
+{{- end -}}
+public enum {{$serviceAPIName}} {
+    public static let basePath = "{{$basePath}}{{$service.Name}}"
+{{- range $methodIndex, $method := $service.Methods}}
+{{- $methodAPIName := get $methodAPINames (printf "%d" $methodIndex) }}
 
     public enum {{$methodAPIName}} {
         public static let path = "/{{$method.Name}}"
@@ -279,23 +292,8 @@ public struct {{$serviceClientName}}: Sendable {
         self.transport = transport
         self.headers = headers
     }
-    {{- $usedClientMethodNames := dict -}}
     {{- range $methodIndex, $method := $service.Methods}}
-    {{- $methodAPIState := dict "name" "" "selected" false -}}
-    {{- range $_, $candidate := (list $method.Name (printf "%sMethod" $method.Name) (printf "%sRPC" $method.Name) (printf "%sGeneratedRPC" $method.Name) (printf "%sGeneratedRPC%d" $method.Name $methodIndex)) -}}
-        {{- if not (get $methodAPIState "selected") -}}
-            {{- $collisionState := dict "collision" false -}}
-            {{- if or (exists $reservedTypeNames $candidate) (exists $usedClientMethodNames $candidate) -}}
-                {{- set $collisionState "collision" true -}}
-            {{- end -}}
-            {{- if not (get $collisionState "collision") -}}
-                {{- set $methodAPIState "name" $candidate -}}
-                {{- set $methodAPIState "selected" true -}}
-                {{- set $usedClientMethodNames $candidate true -}}
-            {{- end -}}
-        {{- end -}}
-    {{- end -}}
-    {{- $methodAPIName := get $methodAPIState "name" }}
+    {{- $methodAPIName := get $methodAPINames (printf "%d" $methodIndex) }}
 
     public func {{template "swiftLowerCamel" dict "Name" $method.Name}}({{template "methodInputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}}) async throws{{if gt (len $method.Outputs) 0}} -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}}{{end}} {
         let body = try {{$serviceAPIName}}.{{$methodAPIName}}.encodeRequest({{if gt (len $method.Inputs) 0}}request{{end}})

@@ -47,6 +47,18 @@
         {{- end -}}
     {{- end -}}
 {{- end -}}
+{{- range $suffix := untilStep 1 10000 1 -}}
+    {{- if not (get $unknownCaseState "selected") -}}
+        {{- $candidate := printf "unknownWireValue%d" $suffix -}}
+        {{- if not (exists $enumCaseNames $candidate) -}}
+            {{- set $unknownCaseState "name" $candidate -}}
+            {{- set $unknownCaseState "selected" true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- if not (get $unknownCaseState "selected") -}}
+    {{- fail (printf "unable to choose unique Swift unknown enum case for %q" $type.Name) -}}
+{{- end -}}
 {{- $unknownCaseName := get $unknownCaseState "name" -}}
 public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     {{- range $_, $field := $type.Fields}}

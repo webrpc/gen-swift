@@ -310,6 +310,57 @@ final class GeneratedTests: XCTestCase {
 	runSwiftTest(t, project)
 }
 
+func TestEnumUnknownCaseCollisionFallsBackWithSuffix(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = EnumSuffixCollision
+version = v1.0.0
+basepath = /rpc
+
+enum TransactionStatus: string
+  - Unknown
+  - UnknownValue
+  - Unrecognized
+  - UnrecognizedValue
+  - UnknownWireValue
+  - UnrecognizedWireValue
+  - Pending
+
+struct StatusEcho
+  - status: TransactionStatus
+
+service EnumSuffixCollision
+  - Echo(StatusEcho) => (StatusEcho)
+`
+
+	output := generateSwift(t, schema)
+	requireContains(t, output, "case unknown")
+	requireContains(t, output, "case unknownValue")
+	requireContains(t, output, "case unrecognized")
+	requireContains(t, output, "case unrecognizedValue")
+	requireContains(t, output, "case unknownWireValue")
+	requireContains(t, output, "case unrecognizedWireValue")
+	requireContains(t, output, "case unknownWireValue1(String)")
+
+	project := writeSwiftPackage(t, "enum-unknown-suffix-collision", map[string]string{
+		"Sources/Generated/Client.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testFallbackUnknownValueIsPreservedAfterPreferredNamesCollide() {
+        XCTAssertEqual(TransactionStatus(wireValue: "SOMETHING_NEW"), .unknownWireValue1("SOMETHING_NEW"))
+    }
+}
+`,
+	})
+
+	runSwiftTest(t, project)
+}
+
 func TestEmptyCodingKeysCompile(t *testing.T) {
 	schema := `
 webrpc = v1
@@ -382,6 +433,59 @@ final class GeneratedTests: XCTestCase {
     func testRuntimeStatusMethodDecodesTopLevelRuntimeStatus() throws {
         let data = try XCTUnwrap(#"{"status":{"healthy":true}}"#.data(using: .utf8))
         let response = try RuntimeAPI.RuntimeStatusMethod.decodeResponse(data)
+        XCTAssertTrue(response.status.healthy)
+    }
+}
+`,
+	})
+
+	runSwiftTest(t, project)
+}
+
+func TestMethodTypeNameCollisionFallsBackWithSuffix(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = Runtime
+version = v1.0.0
+basepath = /rpc
+
+struct RuntimeStatus
+  - healthy: bool
+
+struct RuntimeStatusMethod
+  - value: string
+
+struct RuntimeStatusRPC
+  - value: string
+
+struct RuntimeStatusGeneratedRPC
+  - value: string
+
+struct RuntimeStatusGeneratedRPC0
+  - value: string
+
+service Runtime
+  - RuntimeStatus() => (status: RuntimeStatus)
+`
+
+	output := generateSwift(t, schema)
+	requireContains(t, output, "public enum RuntimeStatusGeneratedRPC1")
+	requireContains(t, output, `public static let path = "/RuntimeStatus"`)
+	requireContains(t, output, "public let status: RuntimeStatus")
+	requireContains(t, output, "RuntimeAPI.RuntimeStatusGeneratedRPC1.Response")
+
+	project := writeSwiftPackage(t, "method-type-suffix-collision", map[string]string{
+		"Sources/Generated/Client.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testRuntimeStatusMethodDecodesAfterPreferredNamesCollide() throws {
+        let data = try XCTUnwrap(#"{"status":{"healthy":true}}"#.data(using: .utf8))
+        let response = try RuntimeAPI.RuntimeStatusGeneratedRPC1.decodeResponse(data)
         XCTAssertTrue(response.status.healthy)
     }
 }
