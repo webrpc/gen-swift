@@ -48,11 +48,27 @@
     {{- end -}}
 {{- end -}}
 {{- $serviceClientName := get $serviceClientState "name" -}}
+{{- $usedMethodNames := dict -}}
 public enum {{$serviceAPIName}} {
     public static let basePath = "{{$basePath}}{{$service.Name}}"
-{{- range $_, $method := $service.Methods}}
+{{- range $methodIndex, $method := $service.Methods}}
+{{- $methodAPIState := dict "name" "" "selected" false -}}
+{{- range $_, $candidate := (list $method.Name (printf "%sMethod" $method.Name) (printf "%sRPC" $method.Name) (printf "%sGeneratedRPC" $method.Name) (printf "%sGeneratedRPC%d" $method.Name $methodIndex)) -}}
+    {{- if not (get $methodAPIState "selected") -}}
+        {{- $collisionState := dict "collision" false -}}
+        {{- if or (exists $reservedTypeNames $candidate) (exists $usedMethodNames $candidate) -}}
+            {{- set $collisionState "collision" true -}}
+        {{- end -}}
+        {{- if not (get $collisionState "collision") -}}
+            {{- set $methodAPIState "name" $candidate -}}
+            {{- set $methodAPIState "selected" true -}}
+            {{- set $usedMethodNames $candidate true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- $methodAPIName := get $methodAPIState "name" }}
 
-    public enum {{$method.Name}} {
+    public enum {{$methodAPIName}} {
         public static let path = "/{{$method.Name}}"
         public static let urlPath = "{{$basePath}}{{$service.Name}}/{{$method.Name}}"
         {{- if and (not $method.Succinct) (gt (len $method.Inputs) 0) }}
@@ -105,7 +121,21 @@ public enum {{$serviceAPIName}} {
                 {{- end}}
             }
 
-            enum CodingKeys: String, CodingKey {
+            {{- $hasCodingKeys := false -}}
+            {{- range $_, $field := $method.Inputs}}
+                {{- $isExportable := true -}}
+                {{- range $meta := $field.Meta -}}
+                    {{- if exists $meta "json" -}}
+                        {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                            {{- $isExportable = false -}}
+                        {{- end -}}
+                    {{- end -}}
+                {{- end -}}
+                {{- if $isExportable -}}
+                    {{- $hasCodingKeys = true -}}
+                {{- end -}}
+            {{- end}}
+            enum CodingKeys: {{if $hasCodingKeys}}String, {{end}}CodingKey {
                 {{- range $_, $field := $method.Inputs}}
                     {{- $isExportable := true -}}
                     {{- range $meta := $field.Meta -}}
@@ -172,7 +202,21 @@ public enum {{$serviceAPIName}} {
                 {{- end}}
             }
 
-            enum CodingKeys: String, CodingKey {
+            {{- $hasCodingKeys := false -}}
+            {{- range $_, $field := $method.Outputs}}
+                {{- $isExportable := true -}}
+                {{- range $meta := $field.Meta -}}
+                    {{- if exists $meta "json" -}}
+                        {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                            {{- $isExportable = false -}}
+                        {{- end -}}
+                    {{- end -}}
+                {{- end -}}
+                {{- if $isExportable -}}
+                    {{- $hasCodingKeys = true -}}
+                {{- end -}}
+            {{- end}}
+            enum CodingKeys: {{if $hasCodingKeys}}String, {{end}}CodingKey {
                 {{- range $_, $field := $method.Outputs}}
                     {{- $isExportable := true -}}
                     {{- range $meta := $field.Meta -}}
@@ -213,8 +257,8 @@ public enum {{$serviceAPIName}} {
         public static func decodeResponse(
             _ data: Data,
             decoder: JSONDecoder = WebRPCJSON.makeDecoder()
-        ) throws -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}} {
-            try decoder.decode({{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}.self, from: data)
+        ) throws -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}} {
+            try decoder.decode({{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}}.self, from: data)
         }
         {{- end }}
     }
@@ -235,10 +279,26 @@ public struct {{$serviceClientName}}: Sendable {
         self.transport = transport
         self.headers = headers
     }
-    {{- range $_, $method := $service.Methods}}
+    {{- $usedClientMethodNames := dict -}}
+    {{- range $methodIndex, $method := $service.Methods}}
+    {{- $methodAPIState := dict "name" "" "selected" false -}}
+    {{- range $_, $candidate := (list $method.Name (printf "%sMethod" $method.Name) (printf "%sRPC" $method.Name) (printf "%sGeneratedRPC" $method.Name) (printf "%sGeneratedRPC%d" $method.Name $methodIndex)) -}}
+        {{- if not (get $methodAPIState "selected") -}}
+            {{- $collisionState := dict "collision" false -}}
+            {{- if or (exists $reservedTypeNames $candidate) (exists $usedClientMethodNames $candidate) -}}
+                {{- set $collisionState "collision" true -}}
+            {{- end -}}
+            {{- if not (get $collisionState "collision") -}}
+                {{- set $methodAPIState "name" $candidate -}}
+                {{- set $methodAPIState "selected" true -}}
+                {{- set $usedClientMethodNames $candidate true -}}
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+    {{- $methodAPIName := get $methodAPIState "name" }}
 
-    public func {{template "swiftLowerCamel" dict "Name" $method.Name}}({{template "methodInputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}) async throws{{if gt (len $method.Outputs) 0}} -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "TypeMap" $typeMap}}{{end}} {
-        let body = try {{$serviceAPIName}}.{{$method.Name}}.encodeRequest({{if gt (len $method.Inputs) 0}}request{{end}})
+    public func {{template "swiftLowerCamel" dict "Name" $method.Name}}({{template "methodInputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}}) async throws{{if gt (len $method.Outputs) 0}} -> {{template "methodOutputs" dict "Method" $method "ServiceAPIName" $serviceAPIName "MethodAPIName" $methodAPIName "TypeMap" $typeMap}}{{end}} {
+        let body = try {{$serviceAPIName}}.{{$methodAPIName}}.encodeRequest({{if gt (len $method.Inputs) 0}}request{{end}})
         let requestHeaders = makeWebRPCHeaders(
             headers(),
             includeWebRPCHeader: {{if eq (get $opts "webrpcHeader") true}}true{{else}}false{{end}}
@@ -246,21 +306,21 @@ public struct {{$serviceClientName}}: Sendable {
         {{- if eq (len $method.Outputs) 0 }}
         _ = try await executeWebRPC(
             baseURL: baseURL,
-            urlPath: {{$serviceAPIName}}.{{$method.Name}}.urlPath,
+            urlPath: {{$serviceAPIName}}.{{$methodAPIName}}.urlPath,
             body: body,
             transport: transport,
             headers: requestHeaders,
-            decodeSuccess: {{$serviceAPIName}}.{{$method.Name}}.decodeResponse,
+            decodeSuccess: {{$serviceAPIName}}.{{$methodAPIName}}.decodeResponse,
         )
         return
         {{- else }}
         return try await executeWebRPC(
             baseURL: baseURL,
-            urlPath: {{$serviceAPIName}}.{{$method.Name}}.urlPath,
+            urlPath: {{$serviceAPIName}}.{{$methodAPIName}}.urlPath,
             body: body,
             transport: transport,
             headers: requestHeaders,
-            decodeSuccess: {{$serviceAPIName}}.{{$method.Name}}.decodeResponse,
+            decodeSuccess: {{$serviceAPIName}}.{{$methodAPIName}}.decodeResponse,
         )
         {{- end }}
     }

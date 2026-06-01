@@ -8,11 +8,51 @@
 {{range $_i, $type := $types}}{{if gt $_i 0}}
 
 {{end}}{{if isEnumType $type}}
+{{- $enumCaseNames := dict -}}
+{{- range $_, $field := $type.Fields -}}
+    {{- $candidate := $field.Name -}}
+    {{- $replacements := list
+        (dict "from" "HTTPS" "to" "Https")
+        (dict "from" "HTTP" "to" "Http")
+        (dict "from" "OAuth" "to" "Oauth")
+        (dict "from" "OIDC" "to" "Oidc")
+        (dict "from" "PKCE" "to" "Pkce")
+        (dict "from" "UUID" "to" "Uuid")
+        (dict "from" "JSON" "to" "Json")
+        (dict "from" "HTML" "to" "Html")
+        (dict "from" "XML" "to" "Xml")
+        (dict "from" "JWT" "to" "Jwt")
+        (dict "from" "URL" "to" "Url")
+        (dict "from" "URI" "to" "Uri")
+        (dict "from" "RPC" "to" "Rpc")
+        (dict "from" "API" "to" "Api")
+        (dict "from" "OTP" "to" "Otp")
+        (dict "from" "EOA" "to" "Eoa")
+        (dict "from" "ABI" "to" "Abi")
+        (dict "from" "SQL" "to" "Sql")
+        (dict "from" "ID" "to" "Id")
+    -}}
+    {{- range $replacement := $replacements -}}
+        {{- $candidate = replace (get $replacement "from") (get $replacement "to") $candidate -}}
+    {{- end -}}
+    {{- $candidate = camelCase $candidate -}}
+    {{- set $enumCaseNames $candidate true -}}
+{{- end -}}
+{{- $unknownCaseState := dict "name" "" "selected" false -}}
+{{- range $_, $candidate := (list "unknown" "unknownValue" "unrecognized" "unrecognizedValue" "unknownWireValue" "unrecognizedWireValue") -}}
+    {{- if not (get $unknownCaseState "selected") -}}
+        {{- if not (exists $enumCaseNames $candidate) -}}
+            {{- set $unknownCaseState "name" $candidate -}}
+            {{- set $unknownCaseState "selected" true -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- $unknownCaseName := get $unknownCaseState "name" -}}
 public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     {{- range $_, $field := $type.Fields}}
     case {{template "swiftLowerCamel" dict "Name" $field.Name}}
     {{- end}}
-    case unknown(String)
+    case {{$unknownCaseName}}(String)
 
     public var wireValue: String {
         switch self {
@@ -24,7 +64,7 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
             return "{{$field.Name}}"
             {{- end }}
         {{- end}}
-        case .unknown(let value):
+        case .{{$unknownCaseName}}(let value):
             return value
         }
     }
@@ -40,7 +80,7 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
             self = .{{template "swiftLowerCamel" dict "Name" $field.Name}}
         {{- end}}
         default:
-            self = .unknown(wireValue)
+            self = .{{$unknownCaseName}}(wireValue)
         }
     }
 
@@ -106,7 +146,21 @@ public struct {{$type.Name}}: Codable, Sendable {
         {{- end}}
     }
 
-    enum CodingKeys: String, CodingKey {
+    {{- $hasCodingKeys := false -}}
+    {{- range $_, $field := $type.Fields}}
+        {{- $isExportable := true -}}
+        {{- range $meta := $field.Meta -}}
+            {{- if exists $meta "json" -}}
+                {{- if eq (printf "%v" (get $meta "json")) "-" -}}
+                    {{- $isExportable = false -}}
+                {{- end -}}
+            {{- end -}}
+        {{- end -}}
+        {{- if $isExportable -}}
+            {{- $hasCodingKeys = true -}}
+        {{- end -}}
+    {{- end}}
+    enum CodingKeys: {{if $hasCodingKeys}}String, {{end}}CodingKey {
         {{- range $_, $field := $type.Fields}}
             {{- $isExportable := true -}}
             {{- range $meta := $field.Meta -}}
