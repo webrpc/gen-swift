@@ -86,8 +86,16 @@ The real external-schema integration remains available as an opt-in Go test:
 WEBRPC_SWIFT_EXTERNAL_SCHEMA=1 go test ./...
 ```
 
+Regenerate and build the tracked client example with:
+
+```sh
+make -C _examples/ClientExample generate
+make -C _examples/ClientExample build
+make -C _examples diff
+```
+
 CI runs the fast Go suite on every PR and push to `master`, and runs the shared Swift
-integration suite on `macos-latest`.
+integration suite and tracked example checks on `macos-latest`.
 
 ## Options
 

@@ -2,12 +2,13 @@
 
 {{- $method := .Method -}}
 {{- $serviceAPIName := .ServiceAPIName -}}
+{{- $methodAPIName := .MethodAPIName -}}
 
 {{- if eq (len $method.Outputs) 0 -}}
 Void
 {{- else if $method.Succinct -}}
 {{template "type" dict "Type" (index $method.Outputs 0).Type "TypeMap" .TypeMap}}
 {{- else -}}
-{{$serviceAPIName}}.{{$method.Name}}.Response
+{{$serviceAPIName}}.{{$methodAPIName}}.Response
 {{- end -}}
 {{- end -}}

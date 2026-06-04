@@ -1,0 +1,28 @@
+webrpc = v1
+
+name = example
+version = v1.0.0
+basepath = /rpc
+
+enum TransactionStatus: string
+  - UNKNOWN
+  - PENDING
+  - SUCCEEDED
+
+struct RuntimeStatus
+  - healthy: bool
+  - version: string
+
+struct TransactionEnvelope
+  - id: string
+  - status: TransactionStatus
+
+struct InternalOnly
+  - hidden: string
+    + json = -
+
+service ExampleService
+  - Ping() => (version: string)
+  - RuntimeStatus() => (status: RuntimeStatus)
+  - EchoTransaction(TransactionEnvelope) => (TransactionEnvelope)
+  - EchoInternal(InternalOnly) => (InternalOnly)
