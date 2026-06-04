@@ -39,5 +39,14 @@ jobs:
       - name: Show Swift version
         run: swift --version
 
+      - name: Regenerate example client
+        run: make -C _examples/ClientExample generate
+
+      - name: Check regenerated example diff
+        run: make -C _examples diff
+
+      - name: Build example client
+        run: make -C _examples/ClientExample build
+
       - name: Run shared Swift integration suite
         run: ./Tests/test.sh
