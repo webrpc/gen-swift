@@ -48,5 +48,8 @@ jobs:
       - name: Build example client
         run: make -C _examples/ClientExample build
 
+      - name: Verify streaming is rejected
+        run: make -C _examples test-streaming
+
       - name: Run shared Swift integration suite
         run: ./Tests/test.sh

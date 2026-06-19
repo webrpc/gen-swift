@@ -28,6 +28,16 @@
   {{- exit 1 -}}
 {{- end -}}
 
+{{- /* Streaming is not supported; fail loudly rather than emit broken unary code. */ -}}
+{{- range $_, $service := .Services -}}
+  {{- range $_, $method := $service.Methods -}}
+    {{- if or $method.StreamInput $method.StreamOutput -}}
+      {{- stderrPrintf "%s generator error: streaming methods are not supported (%s.%s)\n" $.WebrpcTarget $service.Name $method.Name -}}
+      {{- exit 1 -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{- $typeMap := dict -}}
 {{- set $typeMap "null" "WebRPCNull" -}}
 {{- set $typeMap "any" "WebRPCJSONValue" -}}
