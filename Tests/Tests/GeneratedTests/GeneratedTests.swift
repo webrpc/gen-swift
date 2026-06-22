@@ -3,6 +3,18 @@ import XCTest
 @testable import Generated
 
 final class GeneratedTests: XCTestCase {
+    func testTypeAliasResolvesToUnderlyingType() throws {
+        // `type UserID: uint64` in test.ridl must render a typealias to the base type.
+        let id: UserID = 42
+        XCTAssertEqual(id, UInt64(42))
+
+        // Aliases are usable wherever the base type is expected (e.g. request fields).
+        let request = HelperAPI.GetUser.Request(userId: id)
+        let body = try HelperAPI.GetUser.encodeRequest(request)
+        let bodyJSON = try JSONSerialization.jsonObject(with: body) as? [String: Any]
+        XCTAssertEqual(bodyJSON?["userId"] as? NSNumber, 42)
+    }
+
     func testHelperRoundTripWorks() throws {
         let request = HelperAPI.GetUser.Request(userId: 7)
         let body = try HelperAPI.GetUser.encodeRequest(request)

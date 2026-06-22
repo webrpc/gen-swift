@@ -103,3 +103,4 @@ integration suite and tracked example checks on `macos-latest`.
 | --- | --- | --- |
 | `-client` | generate client code | unset (`false`) |
 | `-webrpcHeader` | send the standard `Webrpc` header on client requests | `true` |
+| `-schemaHash=false` | omit the schema hash + version constants from generated output | `true` |
