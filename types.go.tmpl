@@ -2,6 +2,7 @@
 
 {{- $typeMap := .TypeMap -}}
 {{- $types := .Types -}}
+{{- $access := get .Opts "visibility" -}}
 
 {{if $types}}
 // MARK: - Types
@@ -60,13 +61,13 @@
     {{- fail (printf "unable to choose unique Swift unknown enum case for %q" $type.Name) -}}
 {{- end -}}
 {{- $unknownCaseName := get $unknownCaseState "name" -}}
-public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
+{{$access}} enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
     {{- range $_, $field := $type.Fields}}
     case {{template "swiftLowerCamel" dict "Name" $field.Name}}
     {{- end}}
     case {{$unknownCaseName}}(String)
 
-    public var wireValue: String {
+    {{$access}} var wireValue: String {
         switch self {
         {{- range $_, $field := $type.Fields}}
         case .{{template "swiftLowerCamel" dict "Name" $field.Name}}:
@@ -81,7 +82,7 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
         }
     }
 
-    public init(wireValue: String) {
+    {{$access}} init(wireValue: String) {
         switch wireValue {
         {{- range $_, $field := $type.Fields}}
             {{- if eq $type.Type.Expr "string" }}
@@ -96,21 +97,21 @@ public enum {{$type.Name}}: Codable, Hashable, Sendable, WebRPCEnumKey {
         }
     }
 
-    public init(from decoder: Decoder) throws {
+    {{$access}} init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
         self = {{$type.Name}}(wireValue: value)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    {{$access}} func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(wireValue)
     }
 }
 {{else if isAliasType $type}}
-public typealias {{$type.Name}} = {{template "type" dict "Type" $type.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}
+{{$access}} typealias {{$type.Name}} = {{template "type" dict "Type" $type.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}
 {{else if isStructType $type}}
-public struct {{$type.Name}}: Codable, Sendable {
+{{$access}} struct {{$type.Name}}: Codable, Sendable {
     {{- range $_, $field := $type.Fields}}
     {{- $isExportable := true -}}
     {{- range $meta := $field.Meta -}}
@@ -121,11 +122,11 @@ public struct {{$type.Name}}: Codable, Sendable {
         {{- end -}}
     {{- end -}}
     {{- if $isExportable }}
-    public let {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}?{{end}}
+    {{$access}} let {{template "fieldName" dict "Field" $field}}: {{template "type" dict "Type" $field.Type "TypeMap" $typeMap "WebrpcTarget" $.WebrpcTarget}}{{if $field.Optional}}?{{end}}
     {{- end -}}
     {{- end}}
 
-    public init(
+    {{$access}} init(
         {{- $first := true -}}
         {{- range $_, $field := $type.Fields}}
             {{- $isExportable := true -}}

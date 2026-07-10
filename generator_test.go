@@ -616,6 +616,80 @@ service Headers
 	requireNotContains(t, disabledOutput, "requestHeaders[WEBRPC_HEADER] = WEBRPC_HEADER_VALUE")
 }
 
+func TestInternalNamespaceGeneration(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = Scoped
+version = v1.0.0
+basepath = /rpc
+
+struct EchoResponse
+  - message: string
+
+service Echo
+  - Echo() => (response: EchoResponse)
+`
+
+	defaultOutput := generateSwift(t, schema)
+	requireContains(t, defaultOutput, "public struct EchoResponse: Codable, Sendable")
+	requireNotContains(t, defaultOutput, "enum WaasGenerated {")
+
+	internalOutput := generateSwift(t, schema, "-visibility=internal")
+	requireContains(t, internalOutput, "internal struct EchoResponse: Codable, Sendable")
+	requireNotContains(t, internalOutput, "public ")
+	requireNotContains(t, internalOutput, "enum WaasGenerated {")
+
+	publicNamespacedOutput := generateSwift(t, schema, "-namespace=WaasGenerated")
+	requireContains(t, publicNamespacedOutput, "public enum WaasGenerated {")
+	requireContains(t, publicNamespacedOutput, "public static func versionFromHeader(")
+
+	output := generateSwift(t, schema, "-visibility=internal", "-namespace=WaasGenerated")
+	requireContains(t, output, "internal enum WaasGenerated {")
+	requireContains(t, output, "internal struct EchoResponse: Codable, Sendable")
+	requireContains(t, output, "internal static func versionFromHeader(")
+	requireContains(t, output, "private static func webRPCHeaderValue(")
+	requireNotContains(t, output, "public ")
+
+	project := writeSwiftPackage(t, "internal-namespace", map[string]string{
+		"Sources/Generated/Client.swift": output,
+		"Tests/GeneratedTests/GeneratedTests.swift": `
+import Foundation
+import XCTest
+@testable import Generated
+
+final class GeneratedTests: XCTestCase {
+    func testNamespacedGeneratedClientDecodesResponse() throws {
+        let response = try WaasGenerated.ScopedEchoAPI.Echo.decodeResponse(
+            try XCTUnwrap(#"{"response":{"message":"ok"}}"#.data(using: .utf8))
+        )
+
+        XCTAssertEqual(response.response.message, "ok")
+        XCTAssertEqual(
+            WaasGenerated.versionFromHeader(["Webrpc": WaasGenerated.WEBRPC_HEADER_VALUE]).schemaName,
+            "Scoped"
+        )
+    }
+}
+`,
+	})
+
+	runSwiftTest(t, project)
+}
+
+func TestRejectsInvalidVisibilityOption(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = InvalidVisibility
+version = v1.0.0
+basepath = /rpc
+`
+
+	errOutput := generateSwiftErr(t, schema, "-visibility=private")
+	requireContains(t, errOutput, "visibility must be public or internal")
+}
+
 func TestExternalSchemaGeneratesCompilableClient(t *testing.T) {
 	if os.Getenv("WEBRPC_SWIFT_EXTERNAL_SCHEMA") == "" {
 		t.Skip("set WEBRPC_SWIFT_EXTERNAL_SCHEMA=1 to run external schema integration test")

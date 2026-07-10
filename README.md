@@ -103,3 +103,5 @@ integration suite and tracked example checks on `macos-latest`.
 | --- | --- | --- |
 | `-client` | generate client code | unset (`false`) |
 | `-webrpcHeader` | send the standard `Webrpc` header on client requests | `true` |
+| `-visibility=public\|internal` | set generated declaration access | `public` |
+| `-namespace=<SwiftIdentifier>` | wrap declarations in a namespace enum | none |
