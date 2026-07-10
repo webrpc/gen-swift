@@ -3,18 +3,20 @@
 {{- $webrpcErrors := .WebrpcErrors -}}
 {{- $schemaErrors := .SchemaErrors -}}
 {{- $opts := .Opts -}}
+{{- $access := get $opts "visibility" -}}
+{{- $static := ternary (ne (get $opts "namespace") "") "static " "" -}}
 
-public let WEBRPC_HEADER = "Webrpc"
-public let WEBRPC_HEADER_VALUE = "{{.WebrpcHeader}}"
+{{$access}} {{$static}}let WEBRPC_HEADER = "Webrpc"
+{{$access}} {{$static}}let WEBRPC_HEADER_VALUE = "{{.WebrpcHeader}}"
 
-public struct WebRPCGeneratedVersions: Sendable, Equatable {
-    public let webrpcGenVersion: String
-    public let codeGenName: String
-    public let codeGenVersion: String
-    public let schemaName: String
-    public let schemaVersion: String
+{{$access}} struct WebRPCGeneratedVersions: Sendable, Equatable {
+    {{$access}} let webrpcGenVersion: String
+    {{$access}} let codeGenName: String
+    {{$access}} let codeGenVersion: String
+    {{$access}} let schemaName: String
+    {{$access}} let schemaVersion: String
 
-    public init(
+    {{$access}} init(
         webrpcGenVersion: String = "",
         codeGenName: String = "",
         codeGenVersion: String = "",
@@ -28,21 +30,21 @@ public struct WebRPCGeneratedVersions: Sendable, Equatable {
         self.schemaVersion = schemaVersion
     }
 
-    public static let empty = WebRPCGeneratedVersions()
+    {{$access}} static let empty = WebRPCGeneratedVersions()
 }
 
-public func versionFromHeader(_ headers: [String: String]) -> WebRPCGeneratedVersions {
+{{$access}} {{$static}}func versionFromHeader(_ headers: [String: String]) -> WebRPCGeneratedVersions {
     guard let headerValue = webRPCHeaderValue(in: headers) else {
         return .empty
     }
     return parseWebRPCGeneratedVersions(headerValue)
 }
 
-public func versionFromHeader(_ response: WebRPCHTTPResponse) -> WebRPCGeneratedVersions {
+{{$access}} {{$static}}func versionFromHeader(_ response: WebRPCHTTPResponse) -> WebRPCGeneratedVersions {
     versionFromHeader(response.headers)
 }
 
-private func webRPCHeaderValue(in headers: [String: String]) -> String? {
+private {{$static}}func webRPCHeaderValue(in headers: [String: String]) -> String? {
     for (name, value) in headers {
         if name.caseInsensitiveCompare(WEBRPC_HEADER) == .orderedSame {
             return value
@@ -51,7 +53,7 @@ private func webRPCHeaderValue(in headers: [String: String]) -> String? {
     return nil
 }
 
-private func parseWebRPCGeneratedVersions(_ header: String) -> WebRPCGeneratedVersions {
+private {{$static}}func parseWebRPCGeneratedVersions(_ header: String) -> WebRPCGeneratedVersions {
     let versions = header.split(separator: ";", omittingEmptySubsequences: false)
     guard versions.count >= 3 else {
         return .empty
@@ -70,7 +72,7 @@ private func parseWebRPCGeneratedVersions(_ header: String) -> WebRPCGeneratedVe
     )
 }
 
-private func makeWebRPCHeaders(
+private {{$static}}func makeWebRPCHeaders(
     _ headers: [String: String],
     includeWebRPCHeader: Bool
 ) -> [String: String] {
@@ -85,20 +87,20 @@ private func makeWebRPCHeaders(
     return requestHeaders
 }
 
-public enum WebRPCJSON {
-    public static func makeEncoder() -> JSONEncoder {
+{{$access}} enum WebRPCJSON {
+    {{$access}} static func makeEncoder() -> JSONEncoder {
         JSONEncoder()
     }
 
-    public static func makeDecoder() -> JSONDecoder {
+    {{$access}} static func makeDecoder() -> JSONDecoder {
         JSONDecoder()
     }
 }
 
-public struct WebRPCNull: Codable, Sendable {
-    public init() {}
+{{$access}} struct WebRPCNull: Codable, Sendable {
+    {{$access}} init() {}
 
-    public init(from decoder: Decoder) throws {
+    {{$access}} init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         guard container.decodeNil() else {
             throw DecodingError.typeMismatch(
@@ -111,13 +113,13 @@ public struct WebRPCNull: Codable, Sendable {
         }
     }
 
-    public func encode(to encoder: Encoder) throws {
+    {{$access}} func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encodeNil()
     }
 }
 
-public enum WebRPCJSONValue: Codable, Sendable {
+{{$access}} enum WebRPCJSONValue: Codable, Sendable {
     case object([String: WebRPCJSONValue])
     case array([WebRPCJSONValue])
     case string(String)
@@ -127,7 +129,7 @@ public enum WebRPCJSONValue: Codable, Sendable {
     case bool(Bool)
     case null
 
-    public init(from decoder: Decoder) throws {
+    {{$access}} init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         if container.decodeNil() {
@@ -154,7 +156,7 @@ public enum WebRPCJSONValue: Codable, Sendable {
         }
     }
 
-    public func encode(to encoder: Encoder) throws {
+    {{$access}} func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
 
         switch self {
@@ -178,20 +180,20 @@ public enum WebRPCJSONValue: Codable, Sendable {
     }
 }
 
-public protocol WebRPCEnumKey: Hashable, Sendable {
+{{$access}} protocol WebRPCEnumKey: Hashable, Sendable {
     init(wireValue: String)
     var wireValue: String { get }
 }
 
-public struct WebRPCEnumMap<Key, Value>: Codable, Sendable
+{{$access}} struct WebRPCEnumMap<Key, Value>: Codable, Sendable
 where Key: WebRPCEnumKey, Value: Codable & Sendable {
-    public var values: [Key: Value]
+    {{$access}} var values: [Key: Value]
 
-    public init(_ values: [Key: Value] = [:]) {
+    {{$access}} init(_ values: [Key: Value] = [:]) {
         self.values = values
     }
 
-    public init(from decoder: Decoder) throws {
+    {{$access}} init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValues = try container.decode([String: Value].self)
 
@@ -205,19 +207,19 @@ where Key: WebRPCEnumKey, Value: Codable & Sendable {
         self.values = values
     }
 
-    public func encode(to encoder: Encoder) throws {
+    {{$access}} func encode(to encoder: Encoder) throws {
         let rawValues = Dictionary(uniqueKeysWithValues: values.map { ($0.key.wireValue, $0.value) })
         var container = encoder.singleValueContainer()
         try container.encode(rawValues)
     }
 }
 
-public struct WebRPCHTTPResponse: Sendable {
-    public let statusCode: Int
-    public let body: Data
-    public let headers: [String: String]
+{{$access}} struct WebRPCHTTPResponse: Sendable {
+    {{$access}} let statusCode: Int
+    {{$access}} let body: Data
+    {{$access}} let headers: [String: String]
 
-    public init(
+    {{$access}} init(
         statusCode: Int,
         body: Data,
         headers: [String: String] = [:]
@@ -228,7 +230,7 @@ public struct WebRPCHTTPResponse: Sendable {
     }
 }
 
-public protocol WebRPCTransport: Sendable {
+{{$access}} protocol WebRPCTransport: Sendable {
     func post(
         baseURL: String,
         path: String,
@@ -237,24 +239,24 @@ public protocol WebRPCTransport: Sendable {
     ) async throws -> WebRPCHTTPResponse
 }
 
-public struct WebRPCTransportError: Error, Sendable {
-    public let message: String
-    public let underlyingDescription: String?
+{{$access}} struct WebRPCTransportError: Error, Sendable {
+    {{$access}} let message: String
+    {{$access}} let underlyingDescription: String?
 
-    public init(message: String, underlyingDescription: String? = nil) {
+    {{$access}} init(message: String, underlyingDescription: String? = nil) {
         self.message = message
         self.underlyingDescription = underlyingDescription
     }
 }
 
-public struct URLSessionWebRPCTransport: WebRPCTransport, @unchecked Sendable {
-    public let session: URLSession
+{{$access}} struct URLSessionWebRPCTransport: WebRPCTransport, @unchecked Sendable {
+    {{$access}} let session: URLSession
 
-    public init(session: URLSession = .shared) {
+    {{$access}} init(session: URLSession = .shared) {
         self.session = session
     }
 
-    public func post(
+    {{$access}} func post(
         baseURL: String,
         path: String,
         body: Data,
@@ -299,11 +301,11 @@ public struct URLSessionWebRPCTransport: WebRPCTransport, @unchecked Sendable {
     }
 }
 
-private func joinWebRPCURL(baseURL: String, path: String) -> String {
+private {{$static}}func joinWebRPCURL(baseURL: String, path: String) -> String {
     baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/" + path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 }
 
-public func executeWebRPC<Response>(
+{{$access}} {{$static}}func executeWebRPC<Response>(
     baseURL: String,
     urlPath: String,
     body: Data,
@@ -347,7 +349,7 @@ public func executeWebRPC<Response>(
     }
 }
 
-public enum WebRPCErrorKind: Sendable {
+{{$access}} enum WebRPCErrorKind: Sendable {
     {{- range $_, $error := $webrpcErrors}}
     case {{template "swiftLowerCamel" dict "Name" $error.Name}}
     {{- end}}
@@ -356,7 +358,7 @@ public enum WebRPCErrorKind: Sendable {
     {{- end}}
     case unknown
 
-    public var code: Int {
+    {{$access}} var code: Int {
         switch self {
         {{- range $_, $error := $webrpcErrors}}
         case .{{template "swiftLowerCamel" dict "Name" $error.Name}}:
@@ -371,7 +373,7 @@ public enum WebRPCErrorKind: Sendable {
         }
     }
 
-    public static func fromCode(_ code: Int) -> WebRPCErrorKind {
+    {{$access}} static func fromCode(_ code: Int) -> WebRPCErrorKind {
         switch code {
         {{- range $_, $error := $webrpcErrors}}
         case {{$error.Code}}:
@@ -387,15 +389,15 @@ public enum WebRPCErrorKind: Sendable {
     }
 }
 
-public struct WebRPCError: Error, Sendable {
-    public let error: String
-    public let code: Int
-    public let message: String
-    public let cause: String
-    public let status: Int
-    public let kind: WebRPCErrorKind
+{{$access}} struct WebRPCError: Error, Sendable {
+    {{$access}} let error: String
+    {{$access}} let code: Int
+    {{$access}} let message: String
+    {{$access}} let cause: String
+    {{$access}} let status: Int
+    {{$access}} let kind: WebRPCErrorKind
 
-    public init(
+    {{$access}} init(
         error: String,
         code: Int,
         message: String,
@@ -420,7 +422,7 @@ private struct WebRPCErrorPayload: Decodable, Sendable {
     let status: Int?
 }
 
-public func decodeWebRPCError(
+{{$access}} {{$static}}func decodeWebRPCError(
     statusCode: Int,
     data: Data,
     decoder: JSONDecoder = WebRPCJSON.makeDecoder()
@@ -445,7 +447,7 @@ public func decodeWebRPCError(
     }
 }
 
-private func webRPCBadResponseError(
+private {{$static}}func webRPCBadResponseError(
     statusCode: Int,
     data: Data,
     cause: String
