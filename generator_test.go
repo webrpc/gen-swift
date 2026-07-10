@@ -650,8 +650,16 @@ name = Scoped
 version = v1.0.0
 basepath = /rpc
 
+enum Flavor: string
+  - Vanilla
+  - Chocolate
+
+type FavoriteFlavor: Flavor
+
 struct EchoResponse
   - message: string
+  - favoriteFlavor: FavoriteFlavor
+  - counts: map<Flavor, uint32>
 
 service Echo
   - Echo() => (response: EchoResponse)
@@ -673,6 +681,9 @@ service Echo
 	output := generateSwift(t, schema, "-visibility=internal", "-namespace=WaasGenerated")
 	requireContains(t, output, "internal enum WaasGenerated {")
 	requireContains(t, output, "internal struct EchoResponse: Codable, Sendable")
+	requireContains(t, output, "internal enum Flavor: Codable, Hashable, Sendable, WebRPCEnumKey")
+	requireContains(t, output, "internal typealias FavoriteFlavor = Flavor")
+	requireContains(t, output, "internal let counts: WebRPCEnumMap<Flavor, UInt32>")
 	requireContains(t, output, "internal static func versionFromHeader(")
 	requireContains(t, output, "private static func webRPCHeaderValue(")
 	requireNotContains(t, output, "public ")
@@ -687,10 +698,12 @@ import XCTest
 final class GeneratedTests: XCTestCase {
     func testNamespacedGeneratedClientDecodesResponse() throws {
         let response = try WaasGenerated.ScopedEchoAPI.Echo.decodeResponse(
-            try XCTUnwrap(#"{"response":{"message":"ok"}}"#.data(using: .utf8))
+            try XCTUnwrap(#"{"response":{"message":"ok","favoriteFlavor":"Vanilla","counts":{"Chocolate":3}}}"#.data(using: .utf8))
         )
 
         XCTAssertEqual(response.response.message, "ok")
+        XCTAssertEqual(response.response.favoriteFlavor, .vanilla)
+        XCTAssertEqual(response.response.counts.values[.chocolate], 3)
         XCTAssertEqual(
             WaasGenerated.versionFromHeader(["Webrpc": WaasGenerated.WEBRPC_HEADER_VALUE]).schemaName,
             "Scoped"
@@ -714,6 +727,21 @@ basepath = /rpc
 
 	errOutput := generateSwiftErr(t, schema, "-visibility=private")
 	requireContains(t, errOutput, "visibility must be public or internal")
+}
+
+func TestRejectsInvalidNamespaceOption(t *testing.T) {
+	schema := `
+webrpc = v1
+
+name = InvalidNamespace
+version = v1.0.0
+basepath = /rpc
+`
+
+	for _, namespace := range []string{"Foo-Bar", "123", "Foo.Bar"} {
+		errOutput := generateSwiftErr(t, schema, "-namespace="+namespace)
+		requireContains(t, errOutput, "namespace must use ASCII identifier syntax")
+	}
 }
 
 func TestExternalSchemaGeneratesCompilableClient(t *testing.T) {

@@ -110,6 +110,9 @@ helpers out of the host library's public Swift API.
 These options are opt-in. Existing generator output remains public and un-namespaced
 unless explicitly configured otherwise.
 
+Namespace values must use ASCII identifier syntax: they start with a letter or `_`
+and contain only letters, digits, or `_`.
+
 | webrpc-gen option | Description | Default |
 | --- | --- | --- |
 | `-client` | generate client code | unset (`false`) |

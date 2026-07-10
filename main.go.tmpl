@@ -6,6 +6,7 @@
 {{- set $opts "schemaHash" (ternary (eq (default .Opts.schemaHash "true") "false") false true) -}}
 {{- set $opts "visibility" (default .Opts.visibility "public") -}}
 {{- set $opts "namespace" (default .Opts.namespace "") -}}
+{{- $namespace := get $opts "namespace" -}}
 
 {{- if exists .Opts "help" -}}
   {{- template "help" $opts -}}
@@ -14,6 +15,11 @@
 
 {{- if not (in (get $opts "visibility") "public" "internal") -}}
   {{- stderrPrintf "%s generator error: visibility must be public or internal\n" .WebrpcTarget -}}
+  {{- exit 1 -}}
+{{- end -}}
+
+{{- if and (ne $namespace "") (not (regexMatch "^[A-Za-z_][A-Za-z0-9_]*$" $namespace)) -}}
+  {{- stderrPrintf "%s generator error: namespace must use ASCII identifier syntax\n" .WebrpcTarget -}}
   {{- exit 1 -}}
 {{- end -}}
 
