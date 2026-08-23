@@ -99,8 +99,24 @@ integration suite and tracked example checks on `macos-latest`.
 
 ## Options
 
+### Embedding A Generated Client
+
+Generated clients are public top-level declarations by default, which is appropriate
+when applications use the generated client directly. Libraries that embed a generated
+client as an implementation detail can use `-namespace` to avoid top-level name
+collisions and `-visibility=internal` to keep generated models, transport types, and
+helpers out of the host library's public Swift API.
+
+These options are opt-in. Existing generator output remains public and un-namespaced
+unless explicitly configured otherwise.
+
+Namespace values must use ASCII identifier syntax: they start with a letter or `_`
+and contain only letters, digits, or `_`.
+
 | webrpc-gen option | Description | Default |
 | --- | --- | --- |
 | `-client` | generate client code | unset (`false`) |
 | `-webrpcHeader` | send the standard `Webrpc` header on client requests | `true` |
 | `-schemaHash=false` | omit the schema hash + version constants from generated output | `true` |
+| `-visibility=public\|internal` | set generated declaration access | `public` |
+| `-namespace=<SwiftIdentifier>` | wrap declarations in a namespace enum | none |
