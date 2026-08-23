@@ -117,5 +117,6 @@ and contain only letters, digits, or `_`.
 | --- | --- | --- |
 | `-client` | generate client code | unset (`false`) |
 | `-webrpcHeader` | send the standard `Webrpc` header on client requests | `true` |
+| `-schemaHash=false` | omit the schema hash + version constants from generated output | `true` |
 | `-visibility=public\|internal` | set generated declaration access | `public` |
 | `-namespace=<SwiftIdentifier>` | wrap declarations in a namespace enum | none |
